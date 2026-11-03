@@ -14,6 +14,11 @@ import SprayWindowView from './components/views/SprayWindowView';
 import CommunitySwarmView from './components/views/CommunitySwarmView';
 import TreatmentTrackerView from './components/farmer/TreatmentTrackerView';
 import VoiceCopilotView from './components/views/VoiceCopilotView';
+import BioBrewerView from './components/views/BioBrewerView';
+import SatelliteView from './components/views/SatelliteView';
+import CropCalendarView from './components/farmer/CropCalendarView';
+import MarketLinkView from './components/farmer/MarketLinkView';
+import SoilHealthView from './components/farmer/SoilHealthView';
 
 // Officer Views
 import OfficerView from './components/views/OfficerView';
@@ -22,6 +27,7 @@ import AlertsView from './components/views/AlertsView';
 import ImpactAnalyticsView from './components/officer/ImpactAnalyticsView';
 import HowItWorksView from './components/views/HowItWorksView';
 import TeamView from './components/views/TeamView';
+import CropInsuranceView from './components/officer/CropInsuranceView';
 
 // Modals
 import AlertPreviewModal from './components/modals/AlertPreviewModal';
@@ -277,8 +283,48 @@ export default function App() {
                 />
               )}
 
-              {farmerTab === 'weather' && (
+              {farmerTab === 'satellite' && (
+                <SatelliteView
+                  farm={currentFarm}
+                  lang={lang}
+                  t={t}
+                />
+              )}
+
+              {farmerTab === 'bio-brewer' && (
+                <BioBrewerView
+                  farm={currentFarm}
+                  lang={lang}
+                  t={t}
+                />
+              )}
+
+              {(farmerTab === 'weather' || farmerTab === 'spray-window') && (
                 <SprayWindowView
+                  farm={currentFarm}
+                  lang={lang}
+                  t={t}
+                />
+              )}
+
+              {farmerTab === 'crop-calendar' && (
+                <CropCalendarView
+                  farm={currentFarm}
+                  lang={lang}
+                  t={t}
+                />
+              )}
+
+              {farmerTab === 'market-link' && (
+                <MarketLinkView
+                  farm={currentFarm}
+                  lang={lang}
+                  t={t}
+                />
+              )}
+
+              {farmerTab === 'soil-health' && (
+                <SoilHealthView
                   farm={currentFarm}
                   lang={lang}
                   t={t}
@@ -362,6 +408,13 @@ export default function App() {
                   t={t}
                   onPlayAudio={handlePlayAudio}
                   isPlayingAudio={isPlayingAudio}
+                />
+              )}
+
+              {officerTab === 'crop-insurance' && (
+                <CropInsuranceView
+                  lang={lang}
+                  t={t}
                 />
               )}
 
