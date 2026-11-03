@@ -34,6 +34,7 @@ export default function Sidebar({
     { id: 'timeline', label: lang === 'mr' ? '७-दिवसीय धोका अंदाज' : lang === 'hi' ? '7-दिवसीय जोखिम' : '7-Day Threat Timeline', icon: TrendingUp, badge: "Core" },
     { id: 'why-risk', label: lang === 'mr' ? 'धोका का निर्माण झाला?' : lang === 'hi' ? 'जोखिम क्यों है?' : 'Why Am I at Risk?', icon: HelpCircle, badge: "XAI" },
     { id: 'action-plan', label: lang === 'mr' ? 'आजचा कृती आराखडा' : lang === 'hi' ? 'आज की कार्ययोजना' : 'Daily Action Plan', icon: ListTodo, badge: "Daily" },
+    { id: 'pik-sakhi', label: lang === 'mr' ? 'पिक सखी क्लस्टर हब' : lang === 'hi' ? 'पिक सखी क्लस्टर' : 'Pik Sakhi Hub (Women)', icon: Users, badge: "Women" },
     { id: 'scanner', label: lang === 'mr' ? 'AI पीक रोगनिदान' : lang === 'hi' ? 'AI फसल निदान' : 'AI Crop Scanner', icon: Camera, badge: "AI" },
     { id: 'traps', label: lang === 'mr' ? 'कामगंध सापळे नोंद' : lang === 'hi' ? 'फेरोमोन ट्रैप' : 'Pheromone Traps', icon: Bug },
     { id: 'weather', label: lang === 'mr' ? 'हवामान व बदल' : lang === 'hi' ? 'मौसम विश्लेषण' : 'Weather Intelligence', icon: Clock },

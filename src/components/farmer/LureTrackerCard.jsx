@@ -77,3 +77,4 @@ export default function LureTrackerCard({ farm, lang = 'en' }) {
     </div>
   );
 }
+

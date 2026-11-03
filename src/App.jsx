@@ -7,6 +7,7 @@ import MyFarmView from './components/views/MyFarmView';
 import RiskForecastView from './components/views/RiskForecastView';
 import WhyAtRiskView from './components/farmer/WhyAtRiskView';
 import ActionPlanView from './components/farmer/ActionPlanView';
+import PikSakhiHubView from './components/farmer/PikSakhiHubView';
 import DiagnoseView from './components/views/DiagnoseView';
 import TrapsScoutingView from './components/views/TrapsScoutingView';
 import SprayWindowView from './components/views/SprayWindowView';
@@ -239,6 +240,13 @@ export default function App() {
                   lang={lang}
                   t={t}
                   onNavigateActionPlan={() => setFarmerTab('action-plan')}
+                />
+              )}
+
+              {farmerTab === 'pik-sakhi' && (
+                <PikSakhiHubView
+                  lang={lang}
+                  onPlayAudio={handlePlayAudio}
                 />
               )}
 

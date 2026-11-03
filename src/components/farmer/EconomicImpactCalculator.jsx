@@ -115,3 +115,4 @@ export default function EconomicImpactCalculator({ farm, lang = 'en' }) {
     </div>
   );
 }
+

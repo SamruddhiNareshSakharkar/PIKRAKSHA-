@@ -121,3 +121,4 @@ export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
     </div>
   );
 }
+
