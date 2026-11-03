@@ -331,6 +331,21 @@ export default function App() {
                 />
               )}
 
+              {officerTab === 'sakhi-surveillance' && (
+                <PikSakhiHubView
+                  lang={lang}
+                  onPlayAudio={handlePlayAudio}
+                />
+              )}
+
+              {officerTab === 'village-outbreaks' && (
+                <CommunitySwarmView
+                  farm={currentFarm}
+                  lang={lang}
+                  t={t}
+                />
+              )}
+
               {officerTab === 'expert-verification' && (
                 <ExpertVerificationView
                   submissions={farmerSubmissions}

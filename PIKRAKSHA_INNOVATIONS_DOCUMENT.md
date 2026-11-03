@@ -70,3 +70,4 @@
 When presenting to the Seva First Innovation Challenge jury, highlight this exact positioning:
 
 > **"Existing apps like MahaVISTAAR and CottonAce are great state-level databases, but they have a blind spot: 51.6% of rural women farmers in Maharashtra do not own a smartphone. PIKRAKSHA does not replace state systems; we are the hyper-local, women-led last-mile delivery engine. Through trained Pik Sakhis, biophysical explainable AI, and pheromone lure tracking, PIKRAKSHA delivers presymptomatic warnings 2 to 7 days before visible damage—at ₹0 cost to the farmer."**
+

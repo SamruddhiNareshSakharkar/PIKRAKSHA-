@@ -48,6 +48,8 @@ export default function Sidebar({
     { id: 'districts', label: lang === 'mr' ? 'जिल्हा देखरेख कक्ष' : 'District Surveillance', icon: Layers },
     { id: 'trap-surveillance', label: lang === 'mr' ? 'सापळे नुकसान पातळी' : 'Trap ETL Surveillance', icon: Bug, badge: "ETL" },
     { id: 'expert-verification', label: lang === 'mr' ? 'तज्ज्ञ पडताळणी कक्ष' : 'Expert Verification', icon: FileCheck2, badge: "Audit" },
+    { id: 'sakhi-surveillance', label: lang === 'mr' ? 'पिक सखी महिला नेटवर्क' : 'Pik Sakhi Women Network', icon: Users, badge: "Women" },
+    { id: 'village-outbreaks', label: lang === 'mr' ? 'गाव पातळीवरील उद्रेक' : 'Village Outbreak Clusters', icon: Radio, badge: "Swarm" },
     { id: 'broadcasting', label: lang === 'mr' ? 'सामूहिक संदेश प्रसारण' : 'Advisory Broadcasting', icon: Send },
     { id: 'impact', label: lang === 'mr' ? 'आर्थिक बचत व प्रभाव' : 'Impact Analytics', icon: Award, badge: "ROI" },
     { id: 'how-it-works', label: lang === 'mr' ? 'प्रणाली कशी चालते?' : 'System Architecture', icon: Info },
