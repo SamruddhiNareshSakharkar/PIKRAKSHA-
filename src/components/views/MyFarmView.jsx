@@ -16,6 +16,9 @@ import {
   FileCheck2,
   Activity
 } from 'lucide-react';
+import LureTrackerCard from '../farmer/LureTrackerCard';
+import EconomicImpactCalculator from '../farmer/EconomicImpactCalculator';
+import WeatherAnomalyRadar from '../farmer/WeatherAnomalyRadar';
 
 export default function MyFarmView({ 
   farm, 
@@ -381,6 +384,12 @@ export default function MyFarmView({
           </div>
         </div>
       </div>
+
+      {/* LURE POTENCY TRACKER */}
+      <LureTrackerCard farm={farm} lang={lang} />
+
+      {/* DIRECT FARMER FINANCIAL SAVINGS ROI CALCULATOR */}
+      <EconomicImpactCalculator farm={farm} lang={lang} />
 
       {/* Log Catch Modal */}
       {showLogModal && (

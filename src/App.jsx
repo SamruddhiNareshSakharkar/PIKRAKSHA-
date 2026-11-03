@@ -25,6 +25,7 @@ import TeamView from './components/views/TeamView';
 // Modals
 import AlertPreviewModal from './components/modals/AlertPreviewModal';
 import NewFarmModal from './components/modals/NewFarmModal';
+import VoiceBulletinModal from './components/modals/VoiceBulletinModal';
 
 // Store & Speech
 import { useStore } from './store/useStore';
@@ -63,6 +64,7 @@ export default function App() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isNewFarmModalOpen, setIsNewFarmModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
   const t = translations[lang] || translations.en;
   const currentTab = portal === 'farmer' ? farmerTab : officerTab;
@@ -148,7 +150,7 @@ export default function App() {
           lang={lang}
           setLang={setLang}
           t={t}
-          onOpenAudio={() => handlePlayAudio()}
+          onOpenAudio={() => setIsVoiceModalOpen(true)}
           onAddNewFarm={() => setIsNewFarmModalOpen(true)}
         />
 
@@ -187,7 +189,7 @@ export default function App() {
                     t={t}
                     onPreviewAlert={() => setIsPreviewModalOpen(true)}
                     onNavigateDiagnose={() => setFarmerTab('scanner')}
-                    onPlayAudio={handlePlayAudio}
+                    onPlayAudio={() => setIsVoiceModalOpen(true)}
                     isPlayingAudio={isPlayingAudio}
                   />
 
@@ -366,6 +368,13 @@ export default function App() {
       </div>
 
       {/* Modals */}
+      <VoiceBulletinModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        farm={currentFarm}
+        lang={lang}
+      />
+
       <AlertPreviewModal
         farm={currentFarm}
         lang={lang}
