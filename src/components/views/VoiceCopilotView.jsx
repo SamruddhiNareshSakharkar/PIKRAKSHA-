@@ -11,21 +11,43 @@ import {
   CheckCircle2, 
   AlertTriangle,
   Lightbulb,
-  Radio
+  Radio,
+  Leaf
 } from 'lucide-react';
 import { playVoiceAlert, stopVoiceAlert } from '../../utils/speech';
 
 export default function VoiceCopilotView({ farm, lang, t }) {
+  const currentLang = lang || 'en';
+  const farmCrop = farm?.crop?.name?.en || 'Cotton';
+  const farmerName = farm?.farmerName?.[currentLang] || farm?.farmerName?.en || 'Farmer';
+  const villageName = farm?.location?.village?.[currentLang] || farm?.location?.village?.en || 'Ner';
+  const acres = farm?.crop?.acres || 2.5;
+
+  const getInitialGreeting = () => {
+    if (currentLang === 'mr') {
+      return `नमस्कार ${farmerName}! मी 'पीकरक्षा AI सहाय्यक' आहे. तुमच्या ${villageName} येथील ${acres} एकर ${farm?.crop?.name?.mr || farmCrop} पिकावर काही कीड किंवा रोगाची लक्षणे दिसताहेत का? माईक दाबून बोला किंवा खालील प्रश्न निवडा.`;
+    } else if (currentLang === 'hi') {
+      return `नमस्ते ${farmerName}! मैं 'पीकरक्षा AI सहायक' हूँ। आपके ${villageName} स्थित ${acres} एकड़ ${farm?.crop?.name?.hi || farmCrop} में क्या लक्षण दिख रहे हैं? माइक दबाकर बोलें या प्रश्न चुनें।`;
+    }
+    return `Hello ${farmerName}! I am your Pikraksha AI Voice Copilot. What symptoms are you observing in your ${acres} acre ${farmCrop} field at ${villageName}? Tap the mic to speak or select a quick question below.`;
+  };
+
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: lang === 'mr'
-        ? `नमस्कार रमेशभाऊ! मी 'पीकरक्षा AI सहाय्यक' आहे. तुमच्या नेर येथील २.५ एकर कापूस पिकावर काही कीड किंवा रोगाची लक्षणे दिसताहेत का? माईक दाबून बोला किंवा खालील प्रश्न निवडा.`
-        : lang === 'hi'
-        ? `नमस्ते रमेश जी! मैं 'पीकरक्षा AI सहायक' हूँ। आपकी कपास की फसल में क्या समस्या आ रही है? माइक दबाकर बोलें अथवा प्रश्न चुनें।`
-        : `Hello Ramesh! I am your Pikraksha AI Voice Copilot. What symptoms are you noticing in your 2.5 acre cotton field at Ner? Tap the mic to speak or pick a quick prompt.`
+      text: getInitialGreeting()
     }
   ]);
+
+  // Reset greeting if farm changes
+  useEffect(() => {
+    setMessages([
+      {
+        sender: 'bot',
+        text: getInitialGreeting()
+      }
+    ]);
+  }, [farm?.id, lang]);
 
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -83,29 +105,75 @@ export default function VoiceCopilotView({ farm, lang, t }) {
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
 
-    // Generate intelligent agronomist response based on query keywords
+    // Generate intelligent university agronomist response based on query keywords and crop
     setTimeout(() => {
       let botReply = "";
       const lower = query.toLowerCase();
 
-      if (lower.includes('फूल') || lower.includes('पाकळ्या') || lower.includes('कळी') || lower.includes('rosette') || lower.includes('pink') || lower.includes('बोंड')) {
-        botReply = lang === 'mr'
-          ? "हे १००% गुलाबी बोंडअळीच्या (Pink Bollworm) प्रादुर्भावाचे लक्षण आहे! पाकळ्या चिकटून डोमकळी तयार झाली आहे. तात्काळ उपाय: सर्व डोमकळ्या तोडून जमिनीत गाडा. शेतात एकरी ५ कामगंध सापळे लावा. बोंडांचे नुकसान ५% पेक्षा जास्त असल्यास ५% निंबोळी अर्क (NSKE) फवारा. रासायनिक कॉकटेल फवारणी करू नका!"
-          : lang === 'hi'
-          ? "यह गुलाबी सुंडी (Pink Bollworm) का स्पष्ट लक्षण है! फूल मुड़कर डोमकली बन गए हैं। तुरंत सभी डोमकली तोड़कर नष्ट करें। खेत में प्रति एकड़ 5 फेरोमोन ट्रैप लगाएं और 5% नीम अर्क का छिड़काव करें।"
-          : "This indicates Pink Bollworm infestation causing rosette flowers. Immediately hand-pick rosette flowers and bury them. Install 5 pheromone traps per acre. Spray 5% Neem Seed Kernel Extract (NSKE). Avoid cocktail chemicals.";
-      } else if (lower.includes('पांढरी') || lower.includes('माशी') || lower.includes('whitefly') || lower.includes('रस')) {
-        botReply = lang === 'mr'
-          ? "उष्ण व कोरड्या हवामानामुळे पांढऱ्या माशीचा व रसशोषक किडींचा प्रादुर्भाव वाढला आहे. तात्काळ एकरी २० पिवळे चिकट सापळे लावा. मित्रकीटक (लेडीबर्ड बीटल) वाचवण्यासाठी सुरुवातीला व्हर्टिसिलियम लेकॅनी जैविक बुरशी २ ग्रॅम/लिटर फवारा."
-          : "Whitefly detected. Install 20 yellow sticky traps per acre immediately and apply Verticillium lecanii bio-fungicide to preserve beneficial predator bugs.";
-      } else if (lower.includes('बुरशी') || lower.includes('डाग') || lower.includes('पाऊस') || lower.includes('mildew') || lower.includes('केवडा')) {
-        botReply = lang === 'mr'
-          ? "हवेतील ८५% पेक्षा जास्त आर्द्रतेमुळे डाऊनी मिल्ड्यू / करपा रोगाचा धोका वाढला आहे. बागेतून अतिरिक्त पाणी चर काढून बाहेर काढा. पाऊस थांबताच १% बोर्डो मिश्रण किंवा विद्यापीठ शिफारशीत संरक्षक बुरशीनाशक फवारा."
-          : "Fungal mildew alert due to high humidity. Ensure vineyard drainage and spray 1% Boardeaux mixture once foliage dries.";
-      } else {
-        botReply = lang === 'mr'
-          ? "तुमची नोंद महावेध हवामान आणि शेताच्या वाढीच्या अवस्थेसोबत तपासली. सध्या तुमचे पीक बोंड अवस्थेत (११८ दिवस) आहे. रात्रीचे तापमान २२°C असल्याने कामगंध सापळ्यांची रोज नोंद ठेवा. काही संशय असल्यास पानाचा फोटो 'पीक रोगनिदान' टॅबमध्ये अपलोड करा."
-          : "Checked your query against Mahavedh AWS microclimate and 118-day boll stage. Keep checking pheromone traps daily. You can also upload a leaf photo in the Diagnose tab.";
+      if (farmCrop === 'Cotton') {
+        if (lower.includes('फूल') || lower.includes('पाकळ्या') || lower.includes('कळी') || lower.includes('rosette') || lower.includes('pink') || lower.includes('बोंड')) {
+          botReply = lang === 'mr'
+            ? "हे १००% गुलाबी बोंडअळीच्या (Pink Bollworm) प्रादुर्भावाचे लक्षण आहे! पाकळ्या चिकटून डोमकळी तयार झाली आहे. तात्काळ उपाय: सर्व डोमकळ्या तोडून जमिनीत गाडा. शेतात एकरी ५ कामगंध सापळे लावा. ५% निंबोळी अर्क (NSKE) फवारा. रासायनिक कॉकटेल फवारणी करू नका!"
+            : lang === 'hi'
+            ? "यह गुलाबी सुंडी (Pink Bollworm) का स्पष्ट लक्षण है! फूल मुड़कर डोमकली बन गए हैं। तुरंत सभी डोमकली तोड़कर नष्ट करें। खेत में प्रति एकड़ 5 फेरोमोन ट्रैप लगाएं और 5% नीम अर्क का छिड़काव करें।"
+            : "This indicates Pink Bollworm infestation causing rosette flowers. Hand-pick and bury rosette flowers immediately. Install 5 pheromone traps per acre and spray 5% Neem Seed Kernel Extract (NSKE). Avoid cocktail chemicals.";
+        } else if (lower.includes('पांढरी') || lower.includes('माशी') || lower.includes('whitefly') || lower.includes('रस')) {
+          botReply = lang === 'mr'
+            ? "उष्ण व कोरड्या हवामानामुळे पांढऱ्या माशीचा व रसशोषक किडींचा प्रादुर्भाव वाढला आहे. तात्काळ एकरी २० पिवळे चिकट सापळे लावा. व्हर्टिसिलियम लेकॅनी जैविक बुरशी २ ग्रॅम/लिटर फवारा."
+            : "Whitefly detected. Install 20 yellow sticky traps per acre immediately and apply Verticillium lecanii bio-fungicide (2g/L) to preserve beneficial bugs.";
+        } else {
+          botReply = lang === 'mr'
+            ? `नेर वेदर स्टेशन व तुमच्या कपाशीच्या ११८ दिवसांच्या अवस्थेनुसार कामगंध सापळ्यात सरासरी १० पतंग आले आहेत. डोमकळ्या तोडणे आणि ५% निंबोळी अर्क ही पहिली पायरी आहे. पानाचा फोटो 'पीक रोगनिदान' टॅबमध्ये अपलोड करू शकता.`
+            : `Cotton at 118 DAS in boll stage. Trap count breached ETL with 10 moths/trap. Priority IPM: hand-pick rosette flowers and spray 5% NSKE. Upload leaf photo to AI Scanner for instant visual diagnosis.`;
+        }
+      } else if (farmCrop === 'Grapes') {
+        if (lower.includes('डाग') || lower.includes('बुरशी') || lower.includes('mildew') || lower.includes('केवडा') || lower.includes('पाऊस') || lower.includes('दव')) {
+          botReply = lang === 'mr'
+            ? "दिंडोरी येथील ८९% आर्द्रतेमुळे द्राक्षांवर डाऊनी मिल्ड्यू (Downy Mildew) बुरशीचा धोका अतिउच्च आहे! पानावरील पिवळसर तेलकट डाग ओळखा. उपाय: बागेतून अतिरिक्त पाणी चर काढून बाहेर काढा. पाने सुकल्यावर १% बोर्डो मिश्रण किंवा कॉपर हायड्रॉक्साईड २ ग्रॅम/लिटर फवारा."
+            : lang === 'hi'
+            ? "89% नमी के कारण अंगूर में डाउनी मिल्ड्यू का भारी खतरा है! पत्तियों के नीचे सफेद फफूंद दिखेगी। पानी निकासी करें और पत्तियां सूखने पर 1% बोर्डो मिश्रण का छिड़काव करें।"
+            : "Downy Mildew alert triggered by 89% humidity in Dindori! Inspect lower leaves for yellow oil spots. Ensure ridge drainage and spray 1% Bordeaux mixture or Copper Hydroxide once canopy dries.";
+        } else if (lower.includes('भुरी') || lower.includes('powdery') || lower.includes('थ्रिप्स')) {
+          botReply = lang === 'mr'
+            ? "पानांवर व घडांवर पांढरी भुकटी दिसल्यास तो भुरी रोग आहे. सकाळी सूर्यप्रकाशात पाण्यात विरघळणारे गंधक (८० डब्ल्यूपी) २ ग्रॅम/लिटर फवारा. तापमानात वाढ झाल्यास दुपारची फवारणी टाळा."
+            : "Powdery mildew alert. Spray wettable sulfur 80 WP at 2g/L during early morning hours. Avoid spraying during hot midday temperatures.";
+        } else {
+          botReply = lang === 'mr'
+            ? `दिंडोरी वेदर स्टेशननुसार आज आर्द्रता जास्त आहे. घडांभोवती हवा खेळती राहण्यासाठी अतिरिक्त फुटवे (Canopy sucker) काढून टाका. सायंकाळी ४ ते ६ दरम्यान १% बोर्डो मिश्रण फवारणी उत्कृष्ट ठरेल.`
+            : `Dindori microclimate indicates high fungal pressure. Thin out canopy shoots to improve airflow and apply preventive 1% Bordeaux mixture between 04:00 PM and 06:00 PM.`;
+        }
+      } else if (farmCrop === 'Soybean') {
+        if (lower.includes('चकती') || lower.includes('भुंगा') || lower.includes('girdle') || lower.includes('खोड')) {
+          botReply = lang === 'mr'
+            ? "सोयाबीनच्या खोडावर २ गोलाकार वळण (Girdle rings) पडल्यास चकती भुंग्याची अंडी आत घातली गेली आहेत! उपाय: प्रादुर्भावग्रस्त वाळलेल्या फांद्या अळीसह तोडून नष्ट करा. शेतात एकरी १० पक्षी थांबे (T-perches) उभारा."
+            : lang === 'hi'
+            ? "गर्डल बीटल (चकती भुंगा) ने तने पर दो रिंग काटकर अंडे दिए हैं। तुरंत सूखे तनों को काटकर नष्ट करें और खेत में 10 टी-आकार के पक्षी बसेरे लगाएं।"
+            : "Girdle beetle detected cutting rings on soybean stems. Clip off and destroy wilted ringed twigs with internal grubs. Erect 10 T-shaped bird perches per acre for natural predation.";
+        } else if (lower.includes('अळी') || lower.includes('लष्करी') || lower.includes('spodoptera') || lower.includes('पाने')) {
+          botReply = lang === 'mr'
+            ? "सोयाबीनवरील लष्करी अळी (Spodoptera) पानांची चाळणी करते. तात्काळ नोमुरिया रायली (Nomuraea rileyi) किंवा स्पाॅडो-एनपीव्ही ५०० मिली प्रति एकर फवारा."
+            : "Spodoptera defoliator detected. Spray Nomuraea rileyi bio-fungicide (5g/L) or Spodo-NPV in late evening for maximum kill.";
+        } else {
+          botReply = lang === 'mr'
+            ? `औसा येथील सोयाबीन पिकावर खोड किडींची नियमित पाहणी करा. रासायनिक फवारणी टाळून एकरी १० पक्षी थांबे व कामगंध सापळे वापरल्यास एकरी ₹१,२०० बचत होते.`
+            : `Soybean in Ausa pod-formation stage. Maintain 10 bird perches and monitor Spodolure traps. Avoid synthetic chemicals to protect native ground predators.`;
+        }
+      } else { // Tomato
+        if (lower.includes('करपा') || lower.includes('blight') || lower.includes('काळे') || lower.includes('सड')) {
+          botReply = lang === 'mr'
+            ? "जुन्नर भागातील ढगाळ हवामानामुळे टोमॅटोवर फायटोफ्थोरा उशिरा येणारा करपा (Late Blight) सक्रिय झाला आहे! खोडावर आणि पानांवर काळसर-तपकिरी चट्टे पडतात. उपाय: तात्काळ ट्रायकोडर्मा हार्झियानम मुळाशी सोडा आणि कॉपर ऑक्सिक्लोराईड २.५ ग्रॅम/लिटर फवारा."
+            : lang === 'hi'
+            ? "टमाटर में पछेती झुलसा (Late Blight) का प्रकोप है! पत्तियों व तनों पर काले जलभराव वाले धब्बे बनते हैं। ट्राइकोडर्मा हरजियानम जमीन में दें और कॉपर ऑक्सीक्लोराइड का छिड़काव करें।"
+            : "Late Blight (Phytophthora infestans) alert in Junnar. Leaves show dark water-soaked lesions. Apply Trichoderma harzianum root drench and spray Copper Oxychloride 50 WP (2.5g/L).";
+        } else if (lower.includes('तुता') || lower.includes('tuta') || lower.includes('पिनवर्म') || lower.includes('सुरंग')) {
+          botReply = lang === 'mr'
+            ? "तुता पिनवर्म (Tuta Absoluta) पानांच्या आत पांढुरक्या नागमोडी सुरंगा तयार करते व फळांमध्ये छिद्र करते. उपाय: एकरी ६ तुता कामगंध सापळे लावा आणि निंबोळी तेल १०००० पीपीएम २ मिली/लिटर फवारा."
+            : "Tuta absoluta leafminer detected. Install 6 Tuta pheromone traps per acre immediately and spray 10,000 ppm Neem oil (2ml/L).";
+        } else {
+          botReply = lang === 'mr'
+            ? `जुन्नर येथील टोमॅटो पिकावर १४ पतंग सापळ्यात आल्याने अतिदक्षतेचा इशारा आहे. झाडांना आधार (Staking) देऊन पाने जमिनीला टेकू देऊ नका. अधिक मार्गदर्शनासाठी फोटो स्कॅनर वापरा.`
+            : `Tomato in Junnar crossed critical trap ETL with 14 moths. Ensure plant staking to keep lower foliage off damp soil. Upload specimen photos to AI Scanner for detailed analysis.`;
+        }
       }
 
       const botMsg = { sender: 'bot', text: botReply };
@@ -117,22 +185,75 @@ export default function VoiceCopilotView({ farm, lang, t }) {
     }, 600);
   };
 
-  const quickPrompts = lang === 'mr' ? [
-    "कपाशीची फुले गळून डोमकळ्या झाल्या आहेत, काय करू?",
-    "हवेतील दमटपणामुळे पानांवर डाग पडलेत, रासायनिक औषध फवारू का?",
-    "कामगंध सापळ्यात १० पतंग आलेत, फवारणी सुरू करावी का?",
-    "पांढरी माशी नियंत्रणासाठी घरगुती जैविक उपाय काय आहे?"
-  ] : lang === 'hi' ? [
-    "कपास के फूल मुड़ गए हैं और झड़ रहे हैं, क्या करें?",
-    "नमी के कारण पत्तों पर धब्बे हैं, क्या दवा छिड़कें?",
-    "फेरोमोन ट्रैप में 10 पतंगे मिले हैं, क्या स्प्रे करें?",
-    "सफेद मक्खी के लिए सुरक्षित जैविक उपाय बताएं?"
-  ] : [
-    "Flower petals are tied like a rosette, what should I do?",
-    "Trap catch is 10 moths today, should I spray chemical pesticide?",
-    "High humidity spots on leaves, safe organic control?",
-    "How to prepare 5% Neem extract for whitefly?"
-  ];
+  // Crop-tailored quick prompts
+  const quickPromptsByCrop = {
+    Cotton: lang === 'mr' ? [
+      "कपाशीची फुले गळून डोमकळ्या झाल्या आहेत, काय करू?",
+      "कामगंध सापळ्यात १० पतंग आलेत, फवारणी करावी का?",
+      "पांढरी माशी नियंत्रणासाठी घरगुती जैविक उपाय काय आहे?",
+      "५% निंबोळी अर्क (NSKE) कसा तयार करावा?"
+    ] : lang === 'hi' ? [
+      "कपास के फूल मुड़कर डोमकली बन गए हैं, क्या करें?",
+      "फेरोमोन ट्रैप में 10 पतंगे मिले हैं, क्या स्प्रे करें?",
+      "सफेद मक्खी के लिए सुरक्षित जैविक उपाय बताएं?",
+      "5% नीम अर्क (NSKE) कैसे बनाएं?"
+    ] : [
+      "Flower petals are tied like a rosette, what should I do?",
+      "Trap catch is 10 moths today, should I spray chemical pesticide?",
+      "How to control whitefly organically?",
+      "How to prepare 5% Neem extract (NSKE)?"
+    ],
+    Grapes: lang === 'mr' ? [
+      "पानांच्या खाली पांढरी बुरशी व तेलकट डाग आहेत (डाऊनी)?",
+      "१% बोर्डो मिश्रण कसे तयार करावे?",
+      "द्राक्ष घड कुजू नये म्हणून काय खबरदारी घ्यावी?",
+      "सध्याच्या ढगाळ हवामानात फवारणीची योग्य वेळ कोणती?"
+    ] : lang === 'hi' ? [
+      "अंगूर के पत्तों पर तेलिया धब्बे हैं (डाउनी मिल्ड्यू)?",
+      "1% बोर्डो मिश्रण बनाने की सही विधि?",
+      "अंगूर के गुच्छों को फफूंद से कैसे बचाएं?",
+      "वर्तमान मौसम में स्प्रे करने का सही समय क्या है?"
+    ] : [
+      "Lower leaves have oily spots and white fungal fuzz (Downy)?",
+      "How to prepare authentic 1% Bordeaux mixture?",
+      "How to protect grape bunches from rotting?",
+      "What is the best spray time in today's humid weather?"
+    ],
+    Soybean: lang === 'mr' ? [
+      "सोयाबीनच्या खोडावर गोलाकार वळण (चकती भुंगा) दिसतंय?",
+      "शेतात पक्षी थांबे (Bird Perches) कसे लावावेत?",
+      "लष्करी अळीसाठी नोमुरिया रायली जैविक बुरशी कशी फवारावी?",
+      "सोयाबीन पिकात रासायनिक कीटकनाशके का टाळावीत?"
+    ] : lang === 'hi' ? [
+      "सोयाबीन के तने पर चकती भुंगा के रिंग दिख रहे हैं?",
+      "खेत में टी-आकार के पक्षी बसेरे कैसे लगाएं?",
+      "लश्करी सुंडी के लिए नोमुरिया रायली कैसे इस्तेमाल करें?",
+      "सोयाबीन में जहरीले रसायनों से कैसे बचें?"
+    ] : [
+      "Noticing circular girdling rings on soybean stems?",
+      "How to install T-shaped bird perches in soybean?",
+      "How to spray Nomuraea rileyi for caterpillar control?",
+      "Why avoid broad-spectrum chemical cocktails?"
+    ],
+    Tomato: lang === 'mr' ? [
+      "टोमॅटोच्या पानांवर व खोडावर काळे चट्टे (करपा) आहेत?",
+      "तुता पिनवर्म (Tuta Absoluta) चे नुकसान कसे ओळखावे?",
+      "ट्रायकोडर्मा जमिनीतून कसा द्यावा?",
+      "फळे पोखरणारी अळी नियंत्रणात आणण्यासाठी काय करावे?"
+    ] : lang === 'hi' ? [
+      "टमाटर की पत्तियों पर पछेती झुलसा (करपा) के काले धब्बे हैं?",
+      "तुता पिनवर्म कीट की रोकथाम कैसे करें?",
+      "ट्राइकोडर्मा जमीन में कैसे दें?",
+      "फल छेदक सुंडी नियंत्रण के जैविक उपाय?"
+    ] : [
+      "Tomato foliage shows dark water-soaked lesions (Late Blight)?",
+      "How to identify and trap Tuta Absoluta pinworm?",
+      "How to apply Trichoderma drench to roots?",
+      "Safe organic control for fruit borer larvae?"
+    ]
+  };
+
+  const currentPrompts = quickPromptsByCrop[farmCrop] || quickPromptsByCrop.Cotton;
 
   return (
     <div className="space-y-6">
@@ -145,88 +266,102 @@ export default function VoiceCopilotView({ farm, lang, t }) {
               <span>{lang === 'mr' ? '२-मार्गी थेट बोलणारा AI सहाय्यक' : 'Exclusive: 2-Way Oral Voice Diagnostic'}</span>
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900">
-              {lang === 'mr' ? 'किसान AI व्हॉईस कोपायलट (मराठी/हिंदी थेट संवाद)' : 'KisanAI Voice Copilot: Natural Oral Agronomist'}
+              {lang === 'mr' 
+                ? `किसान AI व्हॉईस कोपायलट: ${farmerName} (${farmCrop})` 
+                : `KisanAI Voice Copilot: ${farmerName} (${farmCrop})`}
             </h2>
             <p className="text-sm text-slate-600">
               {lang === 'mr'
-                ? 'महिला शेतकरी व अल्पभूधारक शेतकऱ्यांसाठी: टाईप न करता थेट मराठीत बोला आणि कृषी विद्यापीठ प्रमाणित उपाय मराठी आवाजातच ऐका.'
-                : 'Zero-typing conversational copilot for rural women farmers: speak naturally in Marathi/Hindi to receive interactive IPM diagnoses.'}
+                ? `महिला शेतकरी व अल्पभूधारक शेतकऱ्यांसाठी: ${villageName} परिसरातील हवामानानुसार थेट स्थानिक भाषेत बोला आणि कृषी विद्यापीठ शिफारशी ऐका.`
+                : `Zero-typing conversational copilot for rural women farmers: speak naturally in Marathi/Hindi to receive interactive ${farmCrop} IPM diagnoses.`}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-xs font-bold flex items-center gap-1.5">
               <Radio className="w-3 h-3 text-red-500 animate-pulse" />
-              <span>Live Marathi Voice Engine</span>
+              <span>Live Marathi/Hindi Voice Engine</span>
             </span>
           </div>
         </div>
       </div>
 
       {/* Main Chat Interface */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px] overflow-hidden">
-        {/* Chat History */}
-        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/50">
-          {messages.map((msg, idx) => {
-            const isBot = msg.sender === 'bot';
-            return (
-              <div key={idx} className={`flex items-start gap-3 ${isBot ? '' : 'flex-row-reverse'}`}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  isBot ? 'bg-forest-800 text-emerald-300 shadow-xs' : 'bg-emerald-600 text-white shadow-xs'
-                }`}>
-                  {isBot ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                </div>
-
-                <div className={`max-w-xl rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-2xs ${
-                  isBot 
-                    ? 'bg-white border border-slate-200 text-slate-800' 
-                    : 'bg-emerald-700 text-white font-medium'
-                }`}>
-                  <p>{msg.text}</p>
-                  {isBot && (
-                    <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                      <span>VNMKV & MPKV Certified</span>
-                      <button
-                        onClick={() => playVoiceAlert(msg.text, lang, () => setIsSpeaking(true), () => setIsSpeaking(false))}
-                        className="text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1"
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                        <span>{lang === 'mr' ? 'पुन्हा ऐका' : 'Listen'}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col h-[520px]">
+        {/* Messages Scroll Area */}
+        <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/60">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`flex items-start gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+            >
+              <div
+                className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 ${
+                  msg.sender === 'user'
+                    ? 'bg-slate-800 text-white shadow-sm'
+                    : 'bg-gradient-to-br from-emerald-600 to-forest-800 text-white shadow-sm'
+                }`}
+              >
+                {msg.sender === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
               </div>
-            );
-          })}
+
+              <div
+                className={`max-w-[82%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                  msg.sender === 'user'
+                    ? 'bg-slate-900 text-white rounded-tr-xs shadow-xs'
+                    : 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-xs shadow-2xs space-y-2'
+                }`}
+              >
+                <p className="whitespace-pre-line">{msg.text}</p>
+                {msg.sender === 'bot' && (
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <Leaf className="w-3 h-3 text-emerald-600" />
+                      <span>VNMKV / MPKV Verified IPM Advice</span>
+                    </span>
+                    <button
+                      onClick={() => playVoiceAlert(msg.text, lang, () => setIsSpeaking(true), () => setIsSpeaking(false))}
+                      className="text-emerald-700 hover:text-emerald-900 flex items-center gap-1 font-bold"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>{isSpeaking ? 'Playing...' : 'Listen Audio'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Suggestion Pills */}
-        <div className="px-4 py-2 bg-slate-100/80 border-t border-slate-200 overflow-x-auto flex gap-2 no-scrollbar">
-          {quickPrompts.map((prompt, i) => (
+        {/* Quick Prompts Bar */}
+        <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2 overflow-x-auto text-xs">
+          <span className="text-[10px] font-bold text-slate-400 uppercase shrink-0 flex items-center gap-1">
+            <Lightbulb className="w-3 h-3 text-amber-500" /> {farmCrop} Quick Prompts:
+          </span>
+          {currentPrompts.map((prompt, idx) => (
             <button
-              key={i}
+              key={idx}
               onClick={() => handleSendMessage(prompt)}
-              className="shrink-0 px-3 py-1 rounded-full bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200 text-xs font-medium transition"
+              className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 border border-slate-200 text-slate-700 font-medium whitespace-nowrap text-xs transition"
             >
-              💬 {prompt}
+              {prompt}
             </button>
           ))}
         </div>
 
-        {/* Input Bar with Big Microphone Button */}
-        <div className="p-4 bg-white border-t border-slate-200 flex items-center gap-2">
+        {/* Input & Mic Bar */}
+        <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
           <button
             onClick={startListening}
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white transition shadow-sm shrink-0 ${
-              isListening 
-                ? 'bg-red-600 animate-ping' 
-                : 'bg-emerald-600 hover:bg-emerald-700'
+            className={`p-3 rounded-xl transition flex items-center justify-center ${
+              isListening
+                ? 'bg-red-600 text-white animate-pulse shadow-md ring-4 ring-red-200'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
             }`}
-            title="Tap to speak in Marathi or Hindi"
+            title="Tap to speak in Marathi, Hindi, or English"
           >
-            {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
 
           <input
@@ -235,24 +370,22 @@ export default function VoiceCopilotView({ farm, lang, t }) {
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder={
-              lang === 'mr' 
-                ? 'माईक दाबून बोला किंवा येथे प्रश्न टाईप करा...' 
-                : lang === 'hi'
-                ? 'माइक दबाकर बोलें या यहाँ प्रश्न लिखें...'
-                : 'Tap microphone to speak or type your farming query...'
+              isListening
+                ? (lang === 'mr' ? 'ऐकत आहे... बोला...' : 'Listening... Speak now...')
+                : (lang === 'mr' ? `${farmCrop} बद्दल प्रश्न विचारा किंवा वरील माईक दाबा...` : `Ask about ${farmCrop} symptoms or tap the mic...`)
             }
-            className="flex-1 px-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+            className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-900 placeholder:text-slate-400"
           />
 
           <button
             onClick={() => handleSendMessage()}
-            className="w-12 h-12 rounded-2xl bg-forest-800 hover:bg-forest-900 text-white flex items-center justify-center transition shadow-sm shrink-0"
+            disabled={!inputText.trim()}
+            className="p-3 bg-slate-900 hover:bg-black disabled:opacity-40 text-white rounded-xl transition shadow-xs"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4" />
           </button>
         </div>
       </div>
     </div>
   );
 }
-

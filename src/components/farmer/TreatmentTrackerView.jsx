@@ -8,28 +8,63 @@ import {
   Plus, 
   Sparkles,
   ClipboardCheck,
-  ShieldCheck
+  ShieldCheck,
+  Leaf
 } from 'lucide-react';
 
-export default function TreatmentTrackerView({ farm, treatmentLogs, onAddLog, lang, t }) {
+export default function TreatmentTrackerView({ farm, treatmentLogs = [], onAddLog, lang, t }) {
+  const farmCrop = farm?.crop?.name?.en || 'Cotton';
+  const farmLogs = treatmentLogs.filter(log => !log.farmId || log.farmId === farm?.id);
+
+  // Crop-tailored default suggestions
+  const cropDefaults = {
+    Cotton: {
+      defaultIntervention: 'Hand-picked 14 rosette flowers & 5% NSKE spray',
+      placeholderIntervention: 'e.g. Sprayed 5% NSKE & picked 20 rosette flowers',
+      notesPlaceholder: 'e.g. Green bolls showed no new entry holes'
+    },
+    Grapes: {
+      defaultIntervention: 'Applied 1% Bordeaux mixture + canopy suckering',
+      placeholderIntervention: 'e.g. Applied 1% Bordeaux mixture after morning dew',
+      notesPlaceholder: 'e.g. Fungal downy mildew sporulation halted on bunches'
+    },
+    Soybean: {
+      defaultIntervention: 'Installed 12 bird perches & sprayed Nomuraea rileyi',
+      placeholderIntervention: 'e.g. Installed T-shaped bird perches for predatory birds',
+      notesPlaceholder: 'e.g. Girdle beetle damage stopped; no fresh ring cuts'
+    },
+    Tomato: {
+      defaultIntervention: 'Soil drenching with Trichoderma + Tuta pheromone traps',
+      placeholderIntervention: 'e.g. Drenched root zone with Trichoderma harzianum',
+      notesPlaceholder: 'e.g. Late blight stem lesions dried up, new foliage clean'
+    }
+  };
+
+  const activeDefaults = cropDefaults[farmCrop] || cropDefaults.Cotton;
+
   const [intervention, setIntervention] = useState('');
-  const [preCount, setPreCount] = useState(10);
-  const [postCount, setPostCount] = useState(4);
+  const [preCount, setPreCount] = useState(farm?.trapData?.currentCount || 10);
+  const [postCount, setPostCount] = useState(Math.max(1, Math.round((farm?.trapData?.currentCount || 10) * 0.35)));
   const [outcome, setOutcome] = useState('Effective (नियंत्रणात)');
   const [notes, setNotes] = useState('');
+
+  const avgDrop = farmLogs.length > 0
+    ? Math.round(farmLogs.reduce((acc, log) => acc + ((log.preTrapCount - log.postTrapCount) / (log.preTrapCount || 1)) * 100, 0) / farmLogs.length)
+    : 62;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!intervention.trim()) return;
 
     const newLog = {
+      id: `treat_${Date.now()}`,
       farmId: farm.id,
       date: new Date().toISOString().split('T')[0],
       intervention,
       preTrapCount: parseInt(preCount),
       postTrapCount: parseInt(postCount),
       healthOutcome: outcome,
-      notes: notes || "Recorded by farmer following university IPM advice."
+      notes: notes || `Recorded by farmer following university ${farmCrop} IPM protocol.`
     };
 
     onAddLog(newLog);
@@ -48,17 +83,20 @@ export default function TreatmentTrackerView({ farm, treatmentLogs, onAddLog, la
               <span>{lang === 'mr' ? 'उपाययोजना परिणामकारकता नोंद' : 'Treatment Follow-Up Tracker'}</span>
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900">
-              {lang === 'mr' ? 'केलेल्या उपायांचे परिणाम व किडीची घट तपासा' : 'Treatment Effectiveness & Crop Recovery Follow-Up'}
+              {lang === 'mr' 
+                ? `${farm?.farmerName?.mr || farm?.farmerName?.en} (${farmCrop}): उपाययोजना परिणाम व कीड घट` 
+                : `${farm?.farmerName?.en} (${farmCrop}): Treatment Effectiveness & Recovery`}
             </h2>
             <p className="text-sm text-slate-600">
               {lang === 'mr'
-                ? 'केवळ सल्ला देऊन थांबत नाही; केलेल्या जैविक उपाययोजनेनंतर कामगंध सापळ्यातील पतंग कमी झाले का याची पाठपुरावा नोंद.'
-                : 'Closes the loop: Tracks whether the recommended IPM intervention successfully suppressed trap catches and restored crop health.'}
+                ? `केवळ सल्ला देऊन थांबत नाही; केलेल्या जैविक उपाययोजनेनंतर कामगंध सापळ्यातील पतंग कमी झाले का याची पाठपुरावा नोंद.`
+                : `Closes the loop: Tracks whether the recommended ${farmCrop} university IPM intervention successfully reduced pest pressure.`}
             </p>
           </div>
 
-          <div className="bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-xl text-emerald-950 font-bold text-xs">
-            Average Pest Drop: -62%
+          <div className="bg-emerald-50 border border-emerald-300 px-3.5 py-2 rounded-xl text-emerald-950 font-extrabold text-xs flex items-center gap-2">
+            <TrendingDown className="w-4 h-4 text-emerald-600" />
+            <span>Average Pest Drop: -{avgDrop}%</span>
           </div>
         </div>
       </div>
@@ -67,50 +105,62 @@ export default function TreatmentTrackerView({ farm, treatmentLogs, onAddLog, la
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left (7 cols): Historical Treatment Effectiveness Ledger */}
         <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-4">
-          <h3 className="font-extrabold text-slate-900 text-base">
-            {lang === 'mr' ? 'उपाययोजना पाठपुरावा इतिहास' : 'Treatment Follow-Up History'}
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-slate-900 text-base">
+              {lang === 'mr' ? `${farmCrop} उपाययोजना पाठपुरावा इतिहास` : `${farmCrop} Treatment Follow-Up History`}
+            </h3>
+            <span className="text-xs text-slate-500 font-semibold">{farmLogs.length} Records Logged</span>
+          </div>
 
           <div className="space-y-3">
-            {treatmentLogs.map((log, idx) => (
-              <div key={log.id || idx} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-slate-900 text-sm">{log.intervention}</span>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 uppercase">
-                    {log.healthOutcome}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1">
-                  <div className="p-2 bg-white rounded-lg border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">Pre-Intervention</span>
-                    <span className="font-bold text-red-600 text-sm">{log.preTrapCount} moths</span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">Post-Intervention</span>
-                    <span className="font-bold text-emerald-600 text-sm">{log.postTrapCount} moths</span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">Reduction</span>
-                    <span className="font-black text-emerald-700 text-sm">
-                      -{Math.round(((log.preTrapCount - log.postTrapCount) / log.preTrapCount) * 100)}%
+            {farmLogs.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+                No past treatment logs for this farm yet. Use the form on the right to log your first verified intervention.
+              </div>
+            ) : (
+              farmLogs.map((log, idx) => (
+                <div key={log.id || idx} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                      <Leaf className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{log.intervention}</span>
+                    </span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 uppercase">
+                      {log.healthOutcome}
                     </span>
                   </div>
-                </div>
 
-                <div className="text-xs text-slate-600 pt-1 flex justify-between items-center">
-                  <span>{log.notes}</span>
-                  <span className="text-[10px] text-slate-400 font-mono">{log.date}</span>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1">
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[10px]">Pre-Intervention</span>
+                      <span className="font-bold text-red-600 text-sm">{log.preTrapCount} count</span>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[10px]">Post-Intervention</span>
+                      <span className="font-bold text-emerald-600 text-sm">{log.postTrapCount} count</span>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[10px]">Suppression</span>
+                      <span className="font-black text-emerald-700 text-sm">
+                        -{Math.round(((log.preTrapCount - log.postTrapCount) / (log.preTrapCount || 1)) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-600 pt-1 flex justify-between items-center">
+                    <span className="italic">{log.notes}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">{log.date}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
         {/* Right (5 cols): Log New Follow-Up Form */}
         <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-4">
           <h3 className="font-extrabold text-slate-900 text-base">
-            {lang === 'mr' ? 'नवीन उपाययोजना नोंदवा' : 'Log New Treatment Follow-Up'}
+            {lang === 'mr' ? 'नवीन उपाययोजना नोंदवा' : `Log New ${farmCrop} Follow-Up`}
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -123,7 +173,7 @@ export default function TreatmentTrackerView({ farm, treatmentLogs, onAddLog, la
                 required
                 value={intervention}
                 onChange={(e) => setIntervention(e.target.value)}
-                placeholder="e.g. Sprayed 5% NSKE & picked 20 rosette flowers"
+                placeholder={activeDefaults.placeholderIntervention}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
               />
             </div>
@@ -168,7 +218,7 @@ export default function TreatmentTrackerView({ farm, treatmentLogs, onAddLog, la
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Green bolls showed no new entry holes"
+                placeholder={activeDefaults.notesPlaceholder}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium"
               />
             </div>
@@ -186,4 +236,3 @@ export default function TreatmentTrackerView({ farm, treatmentLogs, onAddLog, la
     </div>
   );
 }
-

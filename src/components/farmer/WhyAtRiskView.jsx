@@ -9,7 +9,7 @@ import {
   Thermometer, 
   Bug, 
   Calendar, 
-  Radio,
+  Radio, 
   ArrowRight
 } from 'lucide-react';
 
@@ -22,6 +22,8 @@ export default function WhyAtRiskView({ farm, riskAnalysis = {}, lang = 'en', t 
   const pestNameStr = typeof farm?.primaryAlert?.pestName === 'object' 
     ? (farm.primaryAlert.pestName[currentLang] || farm.primaryAlert.pestName.en) 
     : (farm?.primaryAlert?.pestName || 'Active Threat');
+
+  const cropStageStr = farm?.crop?.stage?.[currentLang] || farm?.crop?.stage?.en || 'Crop Stage';
 
   return (
     <div className="space-y-6">
@@ -86,7 +88,7 @@ export default function WhyAtRiskView({ farm, riskAnalysis = {}, lang = 'en', t 
             </div>
             <div className="flex justify-between text-[10px] text-slate-500 font-medium mt-1.5 flex-wrap gap-1">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-600"></span> Trap Breach (35%)</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500"></span> Boll Stage (25%)</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500"></span> {cropStageStr} (25%)</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Night Microclimate (25%)</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400"></span> Swarm Proximity (15%)</span>
             </div>

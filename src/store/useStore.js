@@ -5,7 +5,7 @@ import { generateDailyActionPlan } from '../engine/actionPlanEngine';
 import { calculateExplainableRisk } from '../engine/riskEngine';
 import { fetchLiveWeatherData } from '../services/weatherService';
 
-const STORAGE_KEY = 'PIKRAKSHA_STORE_V4';
+const STORAGE_KEY = 'PIKRAKSHA_STORE_V5';
 
 const defaultState = {
   portal: 'farmer', // 'farmer' | 'officer'
@@ -75,11 +75,41 @@ const defaultState = {
       id: 'treat_1',
       farmId: 'farm-1',
       date: '2026-10-28',
-      intervention: 'Hand-picked 14 rosette flowers & installed 5 Gossyplure traps',
+      intervention: 'Hand-picked 14 rosette flowers & 5% NSKE (Neem Seed Kernel Extract) spray',
       preTrapCount: 11,
       postTrapCount: 7,
       healthOutcome: 'Effective (नियंत्रणात)',
-      notes: 'Larval boring arrested in Plot A. Reduced new boll entries.'
+      notes: 'Larval boring arrested in Plot A. Reduced new rosette flower formation.'
+    },
+    {
+      id: 'treat_2',
+      farmId: 'farm-2',
+      date: '2026-10-29',
+      intervention: 'Applied 1% Bordeaux mixture + canopy suckering after 14mm dew event',
+      preTrapCount: 8,
+      postTrapCount: 2,
+      healthOutcome: 'Effective (नियंत्रणात)',
+      notes: 'Downy mildew fungal sporulation arrested on young vine leaves. Foliage healthy.'
+    },
+    {
+      id: 'treat_3',
+      farmId: 'farm-3',
+      date: '2026-10-30',
+      intervention: 'Installed 12 T-shaped bird perches & sprayed Nomuraea rileyi bio-agent',
+      preTrapCount: 6,
+      postTrapCount: 2,
+      healthOutcome: 'Effective (नियंत्रणात)',
+      notes: 'Natural avian predators actively reducing girdle beetles and leaf folder caterpillars.'
+    },
+    {
+      id: 'treat_4',
+      farmId: 'farm-4',
+      date: '2026-10-31',
+      intervention: 'Soil drenching with Trichoderma harzianum + 6 Tuta absoluta pheromone traps',
+      preTrapCount: 14,
+      postTrapCount: 4,
+      healthOutcome: 'Effective (नियंत्रणात)',
+      notes: 'Prevented Late Blight stem collar rot and captured 48 male pinworm moths in 48h.'
     }
   ],
   broadcastHistory: [
