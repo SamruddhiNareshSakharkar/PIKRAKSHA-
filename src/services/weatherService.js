@@ -82,3 +82,4 @@ export async function fetchLiveWeatherData(districtName = 'Yavatmal') {
     return null;
   }
 }
+
