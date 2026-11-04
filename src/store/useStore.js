@@ -1,9 +1,14 @@
-// Central state store for PIKRAKSHA with localStorage persistence
-import { useState, useEffect } from 'react';
+// Central state store for PIKRAKSHA with localStorage persistence & Live Weather Feed
+import { useState, useEffect, useRef } from 'react';
 import { farmsData } from '../data/farmsData';
 import { generateDailyActionPlan } from '../engine/actionPlanEngine';
 import { calculateExplainableRisk } from '../engine/riskEngine';
-import { fetchLiveWeatherData } from '../services/weatherService';
+import { 
+  fetchLiveWeatherData, 
+  getBrowserCoordinates, 
+  MAHARASHTRA_STATIONS, 
+  getCachedWeatherData 
+} from '../services/weatherService';
 
 const STORAGE_KEY = 'PIKRAKSHA_STORE_V6';
 
@@ -132,6 +137,15 @@ const getInitialState = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && Array.isArray(parsed.farms) && parsed.farms.length > 0) {
+          const mergedTasks = { ...defaultState.actionTasks };
+          if (parsed.actionTasks) {
+            for (const fId of ['farm-1', 'farm-2', 'farm-3', 'farm-4']) {
+              if (Array.isArray(parsed.actionTasks[fId]) && parsed.actionTasks[fId].length > 0) {
+                mergedTasks[fId] = parsed.actionTasks[fId];
+              }
+            }
+          }
+
           return {
             ...defaultState,
             ...parsed,
@@ -142,17 +156,7 @@ const getInitialState = () => {
             selectedFarmId: parsed.selectedFarmId || 'farm-1',
             farms: parsed.farms,
             trapCounts: { ...defaultState.trapCounts, ...(parsed.trapCounts || {}) },
-            actionTasks: (() => {
-              const merged = { ...defaultState.actionTasks };
-              if (parsed.actionTasks) {
-                for (const fId of ['farm-1', 'farm-2', 'farm-3', 'farm-4']) {
-                  if (Array.isArray(parsed.actionTasks[fId]) && parsed.actionTasks[fId].length > 0) {
-                    merged[fId] = parsed.actionTasks[fId];
-                  }
-                }
-              }
-              return merged;
-            })(),
+            actionTasks: mergedTasks,
             farmerSubmissions: parsed.farmerSubmissions || defaultState.farmerSubmissions,
             treatmentLogs: parsed.treatmentLogs || defaultState.treatmentLogs,
             broadcastHistory: parsed.broadcastHistory || defaultState.broadcastHistory
@@ -168,6 +172,8 @@ const getInitialState = () => {
 
 export const useStore = () => {
   const [state, setState] = useState(getInitialState);
+  const [isSyncingWeather, setIsSyncingWeather] = useState(false);
+  const [weatherSyncError, setWeatherSyncError] = useState(null);
 
   useEffect(() => {
     try {
@@ -187,6 +193,116 @@ export const useStore = () => {
   const farmTrapHistory = (state.trapCounts && state.trapCounts[state.selectedFarmId]) || currentFarm?.trapData?.history || [4, 6, 7, 9, 10, 11, 10];
   const riskAnalysis = calculateExplainableRisk(currentFarm, farmTrapHistory);
 
+  // Sync real-time weather from Open-Meteo & Mahavedh API
+  const syncLiveWeather = async (farmId, customLocation = null) => {
+    const targetId = farmId || state.selectedFarmId;
+    const targetFarm = (state.farms || []).find(f => f.id === targetId) || currentFarm;
+    if (!targetFarm) return;
+
+    setIsSyncingWeather(true);
+    setWeatherSyncError(null);
+    try {
+      let queryOptions = {};
+      if (customLocation && customLocation.coords) {
+        queryOptions = { coords: customLocation.coords };
+      } else if (customLocation && customLocation.district) {
+        queryOptions = { districtName: customLocation.district };
+      } else {
+        const district = typeof targetFarm.location?.district === 'object'
+          ? (targetFarm.location?.district?.en || 'Yavatmal')
+          : (targetFarm.location?.district || 'Yavatmal');
+        queryOptions = { districtName: district };
+      }
+
+      const liveWeather = await fetchLiveWeatherData(queryOptions);
+      if (liveWeather) {
+        setState(prev => {
+          const updatedFarms = prev.farms.map(f => {
+            if (f.id === targetFarm.id) {
+              return {
+                ...f,
+                weatherStation: liveWeather.weatherStation,
+                weather: {
+                  ...f.weather,
+                  ...liveWeather
+                }
+              };
+            }
+            return f;
+          });
+          return {
+            ...prev,
+            farms: updatedFarms
+          };
+        });
+      }
+    } catch (e) {
+      console.error('Failed to sync live weather:', e);
+      setWeatherSyncError(e.message || 'Live weather network request failed');
+    } finally {
+      setIsSyncingWeather(false);
+    }
+  };
+
+  // Browser Geolocation Sync
+  const syncWithGeolocation = async () => {
+    setIsSyncingWeather(true);
+    try {
+      const coords = await getBrowserCoordinates();
+      if (!coords) {
+        alert("Could not access browser location. Please allow GPS permission or select your district manually.");
+        return;
+      }
+      await syncLiveWeather(state.selectedFarmId, { coords });
+    } catch (err) {
+      console.error("GPS Sync error:", err);
+    } finally {
+      setIsSyncingWeather(false);
+    }
+  };
+
+  // Change Farm District to any of the 6 Maharashtra hubs
+  const changeFarmDistrict = async (districtName) => {
+    if (!MAHARASHTRA_STATIONS[districtName]) return;
+    const station = MAHARASHTRA_STATIONS[districtName];
+    
+    setState(prev => {
+      const updatedFarms = prev.farms.map(f => {
+        if (f.id === state.selectedFarmId) {
+          return {
+            ...f,
+            location: {
+              ...f.location,
+              district: { en: station.district, mr: station.district, hi: station.district },
+              village: { en: station.taluka, mr: station.taluka, hi: station.taluka },
+              zone: station.zone
+            },
+            weatherStation: station.stationName
+          };
+        }
+        return f;
+      });
+      return { ...prev, farms: updatedFarms };
+    });
+
+    await syncLiveWeather(state.selectedFarmId, { district: districtName });
+  };
+
+  // Initial live weather sync on startup
+  useEffect(() => {
+    syncLiveWeather(state.selectedFarmId);
+  }, [state.selectedFarmId]);
+
+  // Auto-refresh live weather every 30 minutes
+  useEffect(() => {
+    const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+    const interval = setInterval(() => {
+      syncLiveWeather();
+    }, THIRTY_MINUTES_MS);
+
+    return () => clearInterval(interval);
+  }, [state.selectedFarmId]);
+
   // Update trap count and dynamically recalculate risk
   const logTrapCatch = (farmId, newCount) => {
     setState(prev => {
@@ -205,8 +321,10 @@ export const useStore = () => {
   // Toggle action task completion
   const toggleActionTask = (farmId, taskId) => {
     setState(prev => {
-      const currentTasks = (prev.actionTasks && prev.actionTasks[farmId]) || generateDailyActionPlan(currentFarm, riskAnalysis);
-      const updatedTasks = currentTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+      const tasks = (prev.actionTasks && prev.actionTasks[farmId]) || [];
+      const updatedTasks = tasks.map(t => 
+        t.id === taskId ? { ...t, completed: !t.completed } : t
+      );
       return {
         ...prev,
         actionTasks: {
@@ -217,25 +335,39 @@ export const useStore = () => {
     });
   };
 
-  // Verify farmer AI diagnosis submission (Officer action)
-  const verifyDiagnosisSubmission = (subId, verdict, officerNotes = '') => {
+  // Add custom farmer IPM task
+  const addCustomActionTask = (farmId, task) => {
+    setState(prev => {
+      const targetId = farmId || prev.selectedFarmId;
+      const targetFarm = (prev.farms || []).find(f => f.id === targetId) || prev.farms[0];
+      const existing = (prev.actionTasks && prev.actionTasks[targetId]) || generateDailyActionPlan(targetFarm, calculateExplainableRisk(targetFarm));
+      return {
+        ...prev,
+        actionTasks: {
+          ...prev.actionTasks,
+          [targetId]: [task, ...existing]
+        }
+      };
+    });
+  };
+
+  // Verify or reject diagnosis submission
+  const verifyDiagnosisSubmission = (subId, status, notes) => {
     setState(prev => ({
       ...prev,
-      farmerSubmissions: (prev.farmerSubmissions || []).map(s => s.id === subId ? {
-        ...s,
-        status: verdict,
-        officerNotes: officerNotes || (verdict === 'verified' ? 'Verified by Taluka Agriculture Officer (VNMKV standards).' : 'Rejected: Insufficient focus or non-pathogenic.')
-      } : s)
+      farmerSubmissions: prev.farmerSubmissions.map(s => 
+        s.id === subId ? { ...s, status, officerNotes: notes || s.officerNotes } : s
+      )
     }));
   };
 
-  // Add new farm safely
+  // Add sample farm
   const addNewFarm = (newFarm) => {
     setState(prev => {
       const newActionPlan = generateDailyActionPlan(newFarm, calculateExplainableRisk(newFarm));
       return {
         ...prev,
-        farms: [newFarm, ...(prev.farms || [])],
+        farms: [...prev.farms, newFarm],
         selectedFarmId: newFarm.id,
         farmerTab: 'dashboard',
         trapCounts: {
@@ -280,67 +412,7 @@ export const useStore = () => {
     }));
   };
 
-
-  const [isSyncingWeather, setIsSyncingWeather] = useState(false);
-
-  // Sync real-time weather from Open-Meteo & Mahavedh API
-  const syncLiveWeather = async (farmId) => {
-    const targetId = farmId || state.selectedFarmId;
-    const targetFarm = (state.farms || []).find(f => f.id === targetId) || currentFarm;
-    if (!targetFarm) return;
-
-    setIsSyncingWeather(true);
-    try {
-      const district = typeof targetFarm.location?.district === 'object'
-        ? targetFarm.location?.district?.en
-        : targetFarm.location?.district || 'Yavatmal';
-
-      const liveWeather = await fetchLiveWeatherData(district);
-      if (liveWeather) {
-        setState(prev => {
-          const updatedFarms = prev.farms.map(f => {
-            if (f.id === targetFarm.id) {
-              return {
-                ...f,
-                weather: {
-                  ...f.weather,
-                  ...liveWeather
-                }
-              };
-            }
-            return f;
-          });
-          return {
-            ...prev,
-            farms: updatedFarms
-          };
-        });
-      }
-    } catch (e) {
-      console.error('Failed to sync live weather:', e);
-    } finally {
-      setIsSyncingWeather(false);
-    }
-  };
-
-
-  // Add custom farmer IPM task
-  const addCustomActionTask = (farmId, task) => {
-    setState(prev => {
-      const targetId = farmId || prev.selectedFarmId;
-      const targetFarm = (prev.farms || []).find(f => f.id === targetId) || prev.farms[0];
-      const existing = (prev.actionTasks && prev.actionTasks[targetId]) || generateDailyActionPlan(targetFarm, calculateExplainableRisk(targetFarm));
-      return {
-        ...prev,
-        actionTasks: {
-          ...prev.actionTasks,
-          [targetId]: [task, ...existing]
-        }
-      };
-    });
-  };
-
-  // Factory reset utility if ever needed
+  // Factory reset utility
   const resetStore = () => {
     localStorage.removeItem(STORAGE_KEY);
     setState(defaultState);
@@ -365,6 +437,10 @@ export const useStore = () => {
     resetStore,
     addCustomActionTask,
     syncLiveWeather,
-    isSyncingWeather
+    syncWithGeolocation,
+    changeFarmDistrict,
+    isSyncingWeather,
+    weatherSyncError,
+    maharashtraStations: MAHARASHTRA_STATIONS
   };
 };

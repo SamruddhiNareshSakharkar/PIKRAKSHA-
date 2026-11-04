@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Wind, 
   Droplets, 
@@ -12,19 +12,28 @@ import {
   Compass,
   Sun,
   Layers,
-  Leaf
+  Leaf,
+  Radio
 } from 'lucide-react';
 
-export default function SprayWindowView({ farm, lang, t }) {
+export default function SprayWindowView({ farm, lang = 'en', t }) {
   const currentLang = lang || 'en';
-  const farmCrop = farm?.crop?.name?.en || 'Cotton';
-  const villageName = farm?.location?.village?.[currentLang] || farm?.location?.village?.en || 'Ner';
-  const baseTemp = farm?.weather?.temp || 29;
-  const baseRH = farm?.weather?.humidity || 75;
+  const farmCrop = typeof farm?.crop?.name === 'object'
+    ? (farm?.crop?.name?.[currentLang] || farm?.crop?.name?.en || 'Cotton')
+    : (farm?.crop?.name || 'Cotton');
+  const cropKey = (farm?.crop?.name?.en || 'Cotton').toLowerCase();
+
+  const villageName = typeof farm?.location?.village === 'object'
+    ? (farm?.location?.village?.[currentLang] || farm?.location?.village?.en || 'Ner')
+    : (farm?.location?.village || 'Ner');
+
+  const baseTemp = Math.round(farm?.weather?.temp ?? 29);
+  const baseRH = Math.round(farm?.weather?.humidity ?? 75);
+  const liveDeltaT = farm?.weather?.deltaT?.deltaT ?? 4.2;
 
   // Crop-tailored spray parameters & recommendations
   const cropSprayConfig = {
-    Cotton: {
+    cotton: {
       bestWindow: '04:30 PM – 06:30 PM Today',
       bestWindowMr: 'आज दुपारी ४:३० ते ६:३० दरम्यान',
       recommendedBiocide: '5% NSKE (निंबोळी अर्क) or Beauveria bassiana',
@@ -32,21 +41,19 @@ export default function SprayWindowView({ farm, lang, t }) {
       targetPest: 'Pink Bollworm & Sucking Pests',
       targetPestMr: 'गुलाबी बोंडअळी व रसशोषक किडी',
       pollinatorAdvice: 'Honeybees actively pollinate cotton flowers between 09:00 AM and 03:30 PM. Spraying after 04:30 PM ensures 100% bee safety.',
-      pollinatorAdviceMr: 'सकाळी ९ ते दुपारी ३:३० दरम्यान मधमाश्या फुलांवर परागीभवन करतात. दुपारी ४:३० नंतर फवारल्यास मधमाश्या सुरक्षित राहतात.',
-      deltaTAvg: 4.5
+      pollinatorAdviceMr: 'सकाळी ९ ते दुपारी ३:३० दरम्यान मधमाश्या फुलांवर परागीभवन करतात. दुपारी ४:३० नंतर फवारल्यास मधमाश्या सुरक्षित राहतात.'
     },
-    Grapes: {
+    grapes: {
       bestWindow: '09:30 AM – 11:30 AM & 04:00 PM – 06:00 PM',
       bestWindowMr: 'सकाळी ९:३० ते ११:३० आणि संध्याकाळी ४:०० ते ६:००',
       recommendedBiocide: '1% Bordeaux Mixture (बोर्डो मिश्रण) / Copper Hydroxide',
       recommendedBiocideMr: '१% बोर्डो मिश्रण किंवा कॉपर हायड्रॉक्साईड',
       targetPest: 'Downy Mildew & Powdery Mildew',
       targetPestMr: 'डाऊनी मिल्ड्यू व भुरी रोग',
-      pollinatorAdvice: 'Heavy morning dew until 08:30 AM dilutes and washes off contact fungicides. Wait until leaf canopy is completely dry.',
-      pollinatorAdviceMr: 'सकाळी ८:३० पर्यंत पानांवर भरपूर दवबिंदू असल्याने बुरशीनाशक वाहून जाते. पाने सुकल्यावरच फवारा.',
-      deltaTAvg: 3.8
+      pollinatorAdvice: 'Heavy morning dew until 08:30 AM dilutes contact fungicides. Wait until leaf canopy is completely dry before spraying.',
+      pollinatorAdviceMr: 'सकाळी ८:३० पर्यंत पानांवर भरपूर दवबिंदू असल्याने बुरशीनाशक वाहून जाते. पाने सुकल्यावरच फवारा.'
     },
-    Soybean: {
+    soybean: {
       bestWindow: '06:30 AM – 08:30 AM & 05:00 PM – 07:00 PM',
       bestWindowMr: 'सकाळी ६:३० ते ८:३० आणि संध्याकाळी ५:०० ते ७:००',
       recommendedBiocide: 'Nomuraea rileyi (नोमुरिया रायली) or Spodo-NPV',
@@ -54,10 +61,9 @@ export default function SprayWindowView({ farm, lang, t }) {
       targetPest: 'Girdle Beetle & Tobacco Caterpillar',
       targetPestMr: 'चकती भुंगा व तंबाखूवरील लष्करी अळी',
       pollinatorAdvice: 'Avoid hot midday winds (>12 km/h) which cause chemical drift into adjacent pulse plots and vaporize bio-fungal spores.',
-      pollinatorAdviceMr: 'दुपारच्या कडक उन्हात व वाऱ्यात जैविक बुरशीचे बीजाणू निष्प्रभ होतात. सकाळच्या किंवा सायंकाळच्या थंड हवेत फवारा.',
-      deltaTAvg: 4.8
+      pollinatorAdviceMr: 'दुपारच्या कडक उन्हात व वाऱ्यात जैविक बुरशीचे बीजाणू निष्प्रभ होतात. सकाळच्या किंवा सायंकाळच्या थंड हवेत फवारा.'
     },
-    Tomato: {
+    tomato: {
       bestWindow: '03:45 PM – 06:15 PM Today',
       bestWindowMr: 'आज दुपारी ३:४५ ते ६:१५ दरम्यान',
       recommendedBiocide: 'Trichoderma harzianum or Copper Oxychloride 50 WP',
@@ -65,24 +71,42 @@ export default function SprayWindowView({ farm, lang, t }) {
       targetPest: 'Late Blight (करपा) & Tuta Absoluta (पिनवर्म)',
       targetPestMr: 'फायटोफ्थोरा करपा व तुता पिनवर्म',
       pollinatorAdvice: 'Bumblebees and solitary bees are vital for tomato buzz pollination. Late afternoon spray avoids leaf scalding and shields pollinators.',
-      pollinatorAdviceMr: 'टोमॅटोच्या फुलांचे परागीभवन करणाऱ्या कीटकांच्या संरक्षणासाठी व पानांवर चट्टे पडू नयेत म्हणून उशिरा दुपारी फवारा.',
-      deltaTAvg: 4.2
+      pollinatorAdviceMr: 'टोमॅटोच्या फुलांचे परागीभवन करणाऱ्या कीटकांच्या संरक्षणासाठी व पानांवर चट्टे पडू नयेत म्हणून उशिरा दुपारी फवारा.'
     }
   };
 
-  const currentConfig = cropSprayConfig[farmCrop] || cropSprayConfig.Cotton;
+  const matchedKey = cropKey.includes('grape') ? 'grapes'
+    : cropKey.includes('tomato') ? 'tomato'
+    : cropKey.includes('soybean') ? 'soybean'
+    : 'cotton';
 
-  // Generate hourly schedule calibrated to active farm microclimate
-  const hourlyData = [
-    { time: '06:00 AM', temp: Math.round(baseTemp - 7), rh: Math.min(95, baseRH + 15), wind: 4, deltaT: 1.5, status: 'POOR (अयोग्य)', reason: 'Excess morning dew dilutes biocide', color: 'bg-red-500' },
-    { time: '08:00 AM', temp: Math.round(baseTemp - 4), rh: Math.min(90, baseRH + 8), wind: 6, deltaT: 2.8, status: 'CAUTION (सावध)', reason: 'Honeybees active on fresh flowers', color: 'bg-amber-500' },
-    { time: '10:00 AM', temp: Math.round(baseTemp - 1), rh: Math.max(55, baseRH - 10), wind: 8, deltaT: 4.8, status: 'MODERATE', reason: farmCrop === 'Grapes' ? 'Good for foliage drying' : 'High pollinator foraging activity', color: farmCrop === 'Grapes' ? 'bg-emerald-600' : 'bg-amber-500', best: farmCrop === 'Grapes' },
-    { time: '12:00 PM', temp: Math.round(baseTemp + 3), rh: Math.max(40, baseRH - 25), wind: 13, deltaT: 8.6, status: 'DANGEROUS (धोकादायक)', reason: 'Extreme evaporation & drift losses', color: 'bg-red-600' },
-    { time: '02:00 PM', temp: Math.round(baseTemp + 4), rh: Math.max(38, baseRH - 28), wind: 15, deltaT: 9.8, status: 'DANGEROUS (धोकादायक)', reason: 'Spray droplets vaporize in mid-air', color: 'bg-red-600' },
-    { time: '04:30 PM', temp: Math.round(baseTemp + 1), rh: Math.max(50, baseRH - 12), wind: 7, deltaT: currentConfig.deltaTAvg, status: 'OPTIMAL (उत्कृष्ट)', reason: 'Bees resting, low wind, max leaf absorption', color: 'bg-emerald-600', best: true },
-    { time: '06:00 PM', temp: Math.round(baseTemp - 2), rh: Math.min(80, baseRH - 2), wind: 5, deltaT: 3.8, status: 'OPTIMAL (उत्कृष्ट)', reason: 'Cool canopy, ideal stomatal uptake', color: 'bg-emerald-600', best: true },
-    { time: '08:00 PM', temp: Math.round(baseTemp - 4), rh: Math.min(85, baseRH + 4), wind: 3, deltaT: 2.5, status: 'GOOD (सुरक्षित)', reason: 'No drift, safe for all beneficial insects', color: 'bg-emerald-500' }
-  ];
+  const currentConfig = cropSprayConfig[matchedKey] || cropSprayConfig.cotton;
+
+  // Use live hourly data from Open-Meteo if available
+  const hasLiveHourly = farm?.weather?.hourly && Array.isArray(farm.weather.hourly) && farm.weather.hourly.length > 0;
+
+  const hourlyData = hasLiveHourly
+    ? farm.weather.hourly.map((h) => ({
+        time: h.time,
+        temp: h.temp,
+        rh: h.rh,
+        wind: h.wind,
+        deltaT: h.deltaT,
+        status: h.sprayDecision?.status || 'MODERATE',
+        reason: h.sprayDecision?.reason || 'Calculated from psychrometric live feed',
+        color: h.sprayDecision?.color || 'bg-slate-500',
+        best: h.sprayDecision?.isOptimal || false
+      }))
+    : [
+        { time: '06:00 AM', temp: baseTemp - 7, rh: Math.min(95, baseRH + 15), wind: 4, deltaT: 1.5, status: 'POOR (अयोग्य)', reason: 'Excess morning dew dilutes biocide', color: 'bg-red-500', best: false },
+        { time: '08:00 AM', temp: baseTemp - 4, rh: Math.min(90, baseRH + 8), wind: 6, deltaT: 2.8, status: 'CAUTION (सावध)', reason: 'Honeybees active on fresh flowers', color: 'bg-amber-500', best: false },
+        { time: '10:00 AM', temp: baseTemp - 1, rh: Math.max(55, baseRH - 10), wind: 8, deltaT: 4.8, status: 'MODERATE', reason: matchedKey === 'grapes' ? 'Good for foliage drying' : 'High pollinator foraging activity', color: matchedKey === 'grapes' ? 'bg-emerald-600' : 'bg-amber-500', best: matchedKey === 'grapes' },
+        { time: '12:00 PM', temp: baseTemp + 3, rh: Math.max(40, baseRH - 25), wind: 13, deltaT: 8.6, status: 'DANGEROUS (धोकादायक)', reason: 'Extreme evaporation & drift losses', color: 'bg-red-600', best: false },
+        { time: '02:00 PM', temp: baseTemp + 4, rh: Math.max(38, baseRH - 28), wind: 15, deltaT: 9.8, status: 'DANGEROUS (धोकादायक)', reason: 'Spray droplets vaporize in mid-air', color: 'bg-red-600', best: false },
+        { time: '04:30 PM', temp: baseTemp + 1, rh: Math.max(50, baseRH - 12), wind: 7, deltaT: liveDeltaT, status: 'OPTIMAL (उत्कृष्ट)', reason: 'Bees resting, low wind, max leaf absorption', color: 'bg-emerald-600', best: true },
+        { time: '06:00 PM', temp: baseTemp - 2, rh: Math.min(80, baseRH - 2), wind: 5, deltaT: 3.8, status: 'OPTIMAL (उत्कृष्ट)', reason: 'Cool canopy, ideal stomatal uptake', color: 'bg-emerald-600', best: true },
+        { time: '08:00 PM', temp: baseTemp - 4, rh: Math.min(85, baseRH + 4), wind: 3, deltaT: 2.5, status: 'GOOD (सुरक्षित)', reason: 'No drift, safe for all beneficial insects', color: 'bg-emerald-500', best: false }
+      ];
 
   return (
     <div className="space-y-6">
@@ -90,25 +114,32 @@ export default function SprayWindowView({ farm, lang, t }) {
       <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-2xs space-y-2">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-1">
-              <Clock className="w-3.5 h-3.5 text-emerald-700" />
-              <span>{lang === 'mr' ? 'शेतकरी व मधमाशी रक्षक' : 'Precision Spray Optimizer & Drift Guard'}</span>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+                <Clock className="w-3.5 h-3.5 text-emerald-700" />
+                <span>{currentLang === 'mr' ? 'शेतकरी व मधमाशी रक्षक' : 'Precision Spray Optimizer & Drift Guard'}</span>
+              </div>
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
+                <span>LIVE (Open-Meteo Hourly Feed)</span>
+              </div>
             </div>
+
             <h2 className="text-2xl font-extrabold text-slate-900">
-              {lang === 'mr' 
+              {currentLang === 'mr' 
                 ? `${farmCrop} सुरक्षित फवारणी वेळ व वारा दिशा रडार (${villageName})` 
                 : `${farmCrop} Hourly Spray Window & Drift Guard (${villageName})`}
             </h2>
             <p className="text-sm text-slate-600">
-              {lang === 'mr'
-                ? 'चुकीच्या वेळी फवारल्यास औषध हवेत उडून ४०% वाया जाते व उपयुक्त मधमाश्या मरतात. पीकरक्षा डेल्टा-टी (Delta-T) व वाऱ्याच्या वेगावरून अचूक वेळ ठरवते.'
+              {currentLang === 'mr'
+                ? 'चुकीच्या वेळी फवारल्यास औषध हवेत उडून ४०% वाया जाते व उपयुक्त मधमाश्या मरतात. पीकरक्षा प्रत्यक्ष डेल्टा-टी (Delta-T) व वाऱ्याच्या वेगावरून अचूक वेळ ठरवते.'
                 : 'Prevents 40% biocide wastage due to mid-air droplet vaporization (Delta-T) and shields vital honeybee pollinators from fatal toxic drift.'}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-extrabold flex items-center gap-1.5">
-              <span>Best Window: {lang === 'mr' ? currentConfig.bestWindowMr : currentConfig.bestWindow}</span>
+              <span>Best Window: {currentLang === 'mr' ? currentConfig.bestWindowMr : currentConfig.bestWindow}</span>
             </span>
           </div>
         </div>
@@ -121,27 +152,27 @@ export default function SprayWindowView({ farm, lang, t }) {
             {farmCrop} University IPM Protocol
           </span>
           <h3 className="text-2xl font-extrabold">
-            {lang === 'mr' ? currentConfig.bestWindowMr : currentConfig.bestWindow}
+            {currentLang === 'mr' ? currentConfig.bestWindowMr : currentConfig.bestWindow}
           </h3>
           <p className="text-xs text-emerald-200 max-w-xl leading-relaxed">
-            {lang === 'mr' ? currentConfig.pollinatorAdviceMr : currentConfig.pollinatorAdvice}
+            {currentLang === 'mr' ? currentConfig.pollinatorAdviceMr : currentConfig.pollinatorAdvice}
           </p>
           <div className="pt-1 flex flex-wrap items-center gap-2 text-xs">
             <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 font-semibold text-emerald-100 flex items-center gap-1">
               <Leaf className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Recommended: {lang === 'mr' ? currentConfig.recommendedBiocideMr : currentConfig.recommendedBiocide}</span>
+              <span>Recommended: {currentLang === 'mr' ? currentConfig.recommendedBiocideMr : currentConfig.recommendedBiocide}</span>
             </span>
             <span className="px-2.5 py-1 rounded-lg bg-amber-400/20 border border-amber-300/30 font-semibold text-amber-200">
-              Target: {lang === 'mr' ? currentConfig.targetPestMr : currentConfig.targetPest}
+              Target: {currentLang === 'mr' ? currentConfig.targetPestMr : currentConfig.targetPest}
             </span>
           </div>
         </div>
 
         <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-center min-w-[190px]">
-          <div className="text-xs text-emerald-300 font-bold uppercase">Delta-T Index</div>
-          <div className="text-3xl font-black text-amber-300 mt-1">{currentConfig.deltaTAvg} ΔT</div>
+          <div className="text-xs text-emerald-300 font-bold uppercase">Live Delta-T Index</div>
+          <div className="text-3xl font-black text-amber-300 mt-1">{liveDeltaT} ΔT</div>
           <div className="text-[10px] text-white/90 font-medium mt-1">Ideal Range (2.0 – 8.0 ΔT)</div>
-          <div className="text-[9px] text-emerald-200 mt-0.5">Calculated from {baseTemp}°C, {baseRH}% RH</div>
+          <div className="text-[9px] text-emerald-200 mt-0.5">Calculated from {baseTemp}°C, {baseRH}% RH (Psychrometric)</div>
         </div>
       </div>
 
@@ -150,18 +181,18 @@ export default function SprayWindowView({ farm, lang, t }) {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h3 className="font-bold text-slate-900 text-base">
-              {lang === 'mr' ? `${farmCrop} तासानिहाय सुरक्षितता तक्ता (आजचे २४ तास)` : `${farmCrop} Hourly Spray Viability Matrix`}
+              {currentLang === 'mr' ? `${farmCrop} तासानिहाय सुरक्षितता तक्ता (${hasLiveHourly ? 'थेट २४ तास अंदाज' : 'आजचे २४ तास'})` : `${farmCrop} Hourly Spray Viability Matrix (${hasLiveHourly ? 'Live 24h Hourly Feed' : 'Telemetry Mode'})`}
             </h3>
-            <p className="text-xs text-slate-500">Live Telemetry Coupled for {villageName} Microclimate</p>
+            <p className="text-xs text-slate-500">Live Telemetry Coupled for {villageName} Microclimate ({farm?.weatherStation || 'AWS Station'})</p>
           </div>
           <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full font-bold">
             Green Rows = Recommended Window
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[460px] overflow-y-auto">
           <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-y border-slate-200 text-[10px]">
+            <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-y border-slate-200 text-[10px] sticky top-0 z-10">
               <tr>
                 <th className="py-3 px-4">Hour</th>
                 <th className="py-3 px-4">Temp (°C)</th>
@@ -174,7 +205,7 @@ export default function SprayWindowView({ farm, lang, t }) {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {hourlyData.map((row, idx) => (
-                <tr key={idx} className={`hover:bg-slate-50/80 ${row.best ? 'bg-emerald-50/60 font-bold' : ''}`}>
+                <tr key={idx} className={`hover:bg-slate-50/80 ${row.best ? 'bg-emerald-50/70 font-bold' : ''}`}>
                   <td className="py-3 px-4 text-slate-900 font-semibold">{row.time}</td>
                   <td className="py-3 px-4">{row.temp}°C</td>
                   <td className="py-3 px-4">{row.rh}%</td>
@@ -204,7 +235,7 @@ export default function SprayWindowView({ farm, lang, t }) {
             <span>1. Pollinator & Bee Shield</span>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Honeybees forage actively in early daylight. Spraying during flower opening decimates pollinator colonies. PIKRAKSHA locks out morning chemical applications to preserve biodiversity.
+            Honeybees forage actively in daylight. Spraying during flower opening decimates pollinator colonies. PIKRAKSHA locks out morning chemical applications to preserve biodiversity.
           </p>
         </div>
 
@@ -214,7 +245,7 @@ export default function SprayWindowView({ farm, lang, t }) {
             <span>2. Delta-T Evaporation Science</span>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Delta-T measures the droplet survival rate before evaporation. If Delta-T exceeds 8, up to 45% of spray droplets vaporize into mid-air before ever touching {farmCrop} foliage.
+            Delta-T measures droplet survival rate before evaporation. If Delta-T exceeds 8, up to 45% of spray droplets vaporize into mid-air before touching {farmCrop} foliage.
           </p>
         </div>
 

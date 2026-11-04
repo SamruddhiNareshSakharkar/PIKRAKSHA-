@@ -66,7 +66,11 @@ export default function App() {
     verifyDiagnosisSubmission,
     addNewFarm,
     addTreatmentLog,
-    addCustomActionTask
+    addCustomActionTask,
+    syncLiveWeather,
+    syncWithGeolocation,
+    changeFarmDistrict,
+    isSyncingWeather
   } = store;
 
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -200,6 +204,10 @@ export default function App() {
                     onNavigateDiagnose={() => setFarmerTab('scanner')}
                     onPlayAudio={() => setIsVoiceModalOpen(true)}
                     isPlayingAudio={isPlayingAudio}
+                    onSyncWeather={syncLiveWeather}
+                    onSyncGeolocation={syncWithGeolocation}
+                    onChangeDistrict={changeFarmDistrict}
+                    isSyncingWeather={isSyncingWeather}
                   />
 
                   {/* Quick Shortcut Banner to Explainable AI & Daily Plan */}

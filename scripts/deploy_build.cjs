@@ -36,3 +36,4 @@ console.log('--- 5. Ensuring .nojekyll ---');
 fs.writeFileSync('.nojekyll', '', 'utf8');
 
 console.log('=== BUILD & DEPLOY PREP COMPLETE ===');
+

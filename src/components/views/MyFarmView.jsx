@@ -29,6 +29,8 @@ export default function MyFarmView({
   onPlayAudio, 
   isPlayingAudio,
   onSyncWeather,
+  onSyncGeolocation,
+  onChangeDistrict,
   isSyncingWeather
 }) {
   const defaultHistory = [4, 6, 7, 9, 10, 11, 10];
@@ -389,7 +391,7 @@ export default function MyFarmView({
 
 
       {/* WEATHER ANOMALY & MICROCLIMATE TRIGGER RADAR */}
-      <WeatherAnomalyRadar farm={farm} lang={lang} onSyncWeather={onSyncWeather} isSyncingWeather={isSyncingWeather} />
+      <WeatherAnomalyRadar farm={farm} lang={lang} onSyncWeather={onSyncWeather} onSyncGeolocation={onSyncGeolocation} onChangeDistrict={onChangeDistrict} isSyncingWeather={isSyncingWeather} />
       {/* LURE POTENCY TRACKER */}
       <LureTrackerCard farm={farm} lang={lang} />
 
