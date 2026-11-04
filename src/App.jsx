@@ -65,7 +65,8 @@ export default function App() {
     toggleActionTask,
     verifyDiagnosisSubmission,
     addNewFarm,
-    addTreatmentLog
+    addTreatmentLog,
+    addCustomActionTask
   } = store;
 
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -262,6 +263,7 @@ export default function App() {
                   farm={currentFarm}
                   tasks={currentFarmTasks}
                   onToggleTask={toggleActionTask}
+                  onAddTask={(newTask) => addCustomActionTask(selectedFarmId, newTask)}
                   lang={lang}
                   t={t}
                 />

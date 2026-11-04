@@ -11,8 +11,10 @@ import {
   ListTodo,
   Info,
   ShieldCheck,
-  Tag
+  Tag,
+  Leaf
 } from 'lucide-react';
+import { generateDailyActionPlan } from '../../engine/actionPlanEngine';
 
 export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, lang = 'en', t }) {
   const currentLang = lang || 'en';
@@ -20,15 +22,31 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
   const [customCategory, setCustomCategory] = useState('Scouting');
   const [customTime, setCustomTime] = useState('20 mins');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [taskList, setTaskList] = useState(tasks || []);
-
-  useEffect(() => {
-    setTaskList(tasks || []);
-  }, [tasks, farm?.id]);
 
   const cropStr = typeof farm?.crop?.name === 'object'
-    ? (farm?.crop?.name?.en || 'Cotton')
-    : (farm?.crop?.name || 'Cotton');
+    ? (farm?.crop?.name?.[currentLang] || farm?.crop?.name?.en || 'Crop')
+    : (farm?.crop?.name || 'Crop');
+
+  const farmerNameStr = typeof farm?.farmerName === 'object'
+    ? (farm?.farmerName?.[currentLang] || farm?.farmerName?.en || 'Farmer')
+    : (farm?.farmerName || 'Farmer');
+
+  const districtStr = typeof farm?.location?.district === 'object'
+    ? (farm?.location?.district?.[currentLang] || farm?.location?.district?.en || 'Maharashtra')
+    : (farm?.location?.district || 'Maharashtra');
+
+  const getEffectiveTasks = () => {
+    if (tasks && Array.isArray(tasks) && tasks.length > 0) {
+      return tasks;
+    }
+    return generateDailyActionPlan(farm);
+  };
+
+  const [taskList, setTaskList] = useState(getEffectiveTasks);
+
+  useEffect(() => {
+    setTaskList(getEffectiveTasks());
+  }, [tasks, farm?.id, farm?.crop]);
 
   const completedCount = taskList.filter(t => t.completed).length;
   const progressPct = taskList.length > 0 ? Math.round((completedCount / taskList.length) * 100) : 0;
@@ -78,23 +96,23 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
             </h2>
             <p className="text-sm text-slate-600">
               {lang === 'mr'
-                ? `${farm.farmerName[lang] || farm.farmerName.en} यांच्या ${cropStr} पिकासाठी आज प्राधान्य द्यायची विद्यापीठ प्रमाणित ५ कामे.`
-                : `University-certified daily IPM tasks tailored for ${farm.farmerName.en}'s ${cropStr} farm in ${farm.location.district.en}.`}
+                ? `${farmerNameStr} यांच्या ${cropStr} पिकासाठी आज प्राधान्य द्यायची कृषी विद्यापीठ प्रमाणित ५ कामे.`
+                : `University-certified daily IPM tasks tailored for ${farmerNameStr}'s ${cropStr} farm in ${districtStr}.`}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => setShowAddModal(prev => !prev)}
               className="px-4 py-2 bg-forest-900 hover:bg-forest-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
             >
               <Plus className="w-4 h-4 text-emerald-400" />
-              <span>{lang === 'mr' ? 'नवीन काम जोडा (+)' : 'Add New Task (+)'}</span>
+              <span>{showAddModal ? (lang === 'mr' ? 'रद्द करा' : 'Cancel') : (lang === 'mr' ? 'नवीन काम जोडा (+)' : 'Add New Task (+)')}</span>
             </button>
 
             <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl min-w-[180px]">
               <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
-                <span>{lang === 'mr' ? 'आजची प्रगती:' : 'Progress:'}</span>
+                <span>{lang === 'mr' ? 'आजची प्रगती:' : "Today's Progress:"}</span>
                 <span className="text-emerald-700">{completedCount}/{taskList.length} ({progressPct}%)</span>
               </div>
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
@@ -120,7 +138,7 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
               onClick={() => setShowAddModal(false)}
               className="text-slate-400 hover:text-slate-600 text-xs font-bold"
             >
-              Cancel ✕
+              ✕
             </button>
           </div>
 
@@ -129,8 +147,8 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
               type="text"
               value={customTaskTitle}
               onChange={(e) => setCustomTaskTitle(e.target.value)}
-              placeholder={lang === 'mr' ? "उदा. 'प्लॉट B मध्ये निंबोळी अर्क फवारणी करणे'..." : "e.g. 'Spray 5% NSKE in Plot B'..."}
-              className="sm:col-span-6 px-3 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder={lang === 'mr' ? `उदा. '${cropStr} शेतात निंबोळी अर्क फवारणी' किंवा 'पक्षी थांबे तपासणे'...` : `e.g. 'Check ${cropStr} field edges' or 'Spray bio-fungicide'...`}
+              className="sm:col-span-6 px-3 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900"
               autoFocus
             />
 
@@ -152,14 +170,14 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
               className="sm:col-span-2 px-3 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-bold text-slate-700"
             >
               <option value="15 mins">15 mins</option>
-              <option value="30 mins">30 mins</option>
-              <option value="45 mins">45 mins</option>
+              <option value="25 mins">25 mins</option>
+              <option value="40 mins">40 mins</option>
               <option value="1 hour">1 hour</option>
             </select>
 
             <button
               type="submit"
-              className="sm:col-span-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black py-2 shadow-xs"
+              className="sm:col-span-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black py-2 shadow-xs transition"
             >
               Save
             </button>
@@ -171,6 +189,14 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
       <div className="space-y-3">
         {taskList.map((task) => {
           const isDone = task.completed;
+          const titleStr = typeof task.title === 'object'
+            ? (task.title[currentLang] || task.title.en)
+            : task.title;
+
+          const reasonStr = typeof task.reason === 'object'
+            ? (task.reason[currentLang] || task.reason.en)
+            : task.reason;
+
           return (
             <div
               key={task.id}
@@ -208,18 +234,18 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
                   </span>
 
                   {task.isCustom && (
-                    <span className="text-[9px] bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.2 rounded">
+                    <span className="text-[9px] bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.5 rounded">
                       Farmer Custom
                     </span>
                   )}
                 </div>
 
                 <h4 className={`text-sm font-extrabold ${isDone ? 'line-through text-slate-400' : 'text-slate-900'}`}>
-                  {task.title[currentLang] || task.title.en}
+                  {titleStr}
                 </h4>
 
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  💡 {task.reason[currentLang] || task.reason.en}
+                  💡 {reasonStr}
                 </p>
               </div>
 
@@ -233,6 +259,16 @@ export default function ActionPlanView({ farm, tasks, onToggleTask, onAddTask, l
             </div>
           );
         })}
+      </div>
+
+      {/* University Scientific Provenance Banner */}
+      <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-4 text-xs text-amber-900 flex items-center gap-3">
+        <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0" />
+        <p className="leading-relaxed">
+          {lang === 'mr'
+            ? `ह्या ५ कृषी विद्यापीठ प्रमाणित पायऱ्या पूर्ण केल्यास किडींचा प्रादुर्भाव ५% आर्थिक नुकसान पातळीच्या आत राहतो आणि अनावश्यक रासायनिक फवारणीचा खर्च टळतो.`
+            : `Completing these 5 verified steps ensures ${cropStr} pests remain below the 5% economic threshold without premature expensive chemical sprays.`}
+        </p>
       </div>
     </div>
   );

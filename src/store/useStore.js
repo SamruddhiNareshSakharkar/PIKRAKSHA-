@@ -5,7 +5,7 @@ import { generateDailyActionPlan } from '../engine/actionPlanEngine';
 import { calculateExplainableRisk } from '../engine/riskEngine';
 import { fetchLiveWeatherData } from '../services/weatherService';
 
-const STORAGE_KEY = 'PIKRAKSHA_STORE_V5';
+const STORAGE_KEY = 'PIKRAKSHA_STORE_V6';
 
 const defaultState = {
   portal: 'farmer', // 'farmer' | 'officer'
@@ -142,7 +142,17 @@ const getInitialState = () => {
             selectedFarmId: parsed.selectedFarmId || 'farm-1',
             farms: parsed.farms,
             trapCounts: { ...defaultState.trapCounts, ...(parsed.trapCounts || {}) },
-            actionTasks: { ...defaultState.actionTasks, ...(parsed.actionTasks || {}) },
+            actionTasks: (() => {
+              const merged = { ...defaultState.actionTasks };
+              if (parsed.actionTasks) {
+                for (const fId of ['farm-1', 'farm-2', 'farm-3', 'farm-4']) {
+                  if (Array.isArray(parsed.actionTasks[fId]) && parsed.actionTasks[fId].length > 0) {
+                    merged[fId] = parsed.actionTasks[fId];
+                  }
+                }
+              }
+              return merged;
+            })(),
             farmerSubmissions: parsed.farmerSubmissions || defaultState.farmerSubmissions,
             treatmentLogs: parsed.treatmentLogs || defaultState.treatmentLogs,
             broadcastHistory: parsed.broadcastHistory || defaultState.broadcastHistory
