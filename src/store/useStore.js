@@ -21,7 +21,10 @@ const defaultState = {
     'farm-4': [6, 8, 9, 11, 13, 14, 14]
   },
   actionTasks: {
-    'farm-1': generateDailyActionPlan(farmsData[0], calculateExplainableRisk(farmsData[0]))
+    'farm-1': generateDailyActionPlan(farmsData[0], calculateExplainableRisk(farmsData[0])),
+    'farm-2': generateDailyActionPlan(farmsData[1], calculateExplainableRisk(farmsData[1])),
+    'farm-3': generateDailyActionPlan(farmsData[2], calculateExplainableRisk(farmsData[2])),
+    'farm-4': generateDailyActionPlan(farmsData[3], calculateExplainableRisk(farmsData[3]))
   },
   farmerSubmissions: [
     {
@@ -280,6 +283,23 @@ export const useStore = () => {
     }
   };
 
+
+  // Add custom farmer IPM task
+  const addCustomActionTask = (farmId, task) => {
+    setState(prev => {
+      const targetId = farmId || prev.selectedFarmId;
+      const targetFarm = (prev.farms || []).find(f => f.id === targetId) || prev.farms[0];
+      const existing = (prev.actionTasks && prev.actionTasks[targetId]) || generateDailyActionPlan(targetFarm, calculateExplainableRisk(targetFarm));
+      return {
+        ...prev,
+        actionTasks: {
+          ...prev.actionTasks,
+          [targetId]: [task, ...existing]
+        }
+      };
+    });
+  };
+
   // Factory reset utility if ever needed
   const resetStore = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -303,6 +323,7 @@ export const useStore = () => {
     sendBroadcastAdvisory,
     addTreatmentLog,
     resetStore,
+    addCustomActionTask,
     syncLiveWeather,
     isSyncingWeather
   };

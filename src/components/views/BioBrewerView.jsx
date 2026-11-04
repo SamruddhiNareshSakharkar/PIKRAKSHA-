@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  FlaskConical, 
-  Coins, 
-  Leaf, 
-  ShieldCheck, 
-  Sparkles, 
-  Scale, 
-  AlertTriangle, 
-  CheckCircle2, 
+import {
+  FlaskConical,
+  Coins,
+  Leaf,
+  ShieldCheck,
+  Sparkles,
+  Scale,
+  AlertTriangle,
+  CheckCircle2,
   Calculator,
   HeartPulse
 } from 'lucide-react';

@@ -38,6 +38,7 @@ import VoiceBulletinModal from './components/modals/VoiceBulletinModal';
 import { useStore } from './store/useStore';
 import { translations } from './data/translations';
 import { playVoiceAlert, stopVoiceAlert } from './utils/speech';
+import { generateDailyActionPlan } from './engine/actionPlanEngine';
 import { Menu, X, Volume2, ArrowRight } from 'lucide-react';
 
 export default function App() {
@@ -77,7 +78,7 @@ export default function App() {
   const currentTab = portal === 'farmer' ? farmerTab : officerTab;
   const setCurrentTab = portal === 'farmer' ? setFarmerTab : setOfficerTab;
 
-  const currentFarmTasks = actionTasks[selectedFarmId] || [];
+  const currentFarmTasks = (actionTasks && actionTasks[selectedFarmId] && actionTasks[selectedFarmId].length > 0) ? actionTasks[selectedFarmId] : generateDailyActionPlan(currentFarm, riskAnalysis);
 
   const handlePlayAudio = (text) => {
     if (isPlayingAudio) {
