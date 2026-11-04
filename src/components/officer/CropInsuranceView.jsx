@@ -139,3 +139,4 @@ export default function CropInsuranceView({ lang, t }) {
     </div>
   );
 }
+

@@ -27,7 +27,9 @@ export default function MyFarmView({
   onPreviewAlert, 
   onNavigateDiagnose, 
   onPlayAudio, 
-  isPlayingAudio 
+  isPlayingAudio,
+  onSyncWeather,
+  isSyncingWeather
 }) {
   const defaultHistory = [4, 6, 7, 9, 10, 11, 10];
   const [trapCounts, setTrapCounts] = useState(farm?.trapData?.history || defaultHistory);
@@ -385,6 +387,9 @@ export default function MyFarmView({
         </div>
       </div>
 
+
+      {/* WEATHER ANOMALY & MICROCLIMATE TRIGGER RADAR */}
+      <WeatherAnomalyRadar farm={farm} lang={lang} onSyncWeather={onSyncWeather} isSyncingWeather={isSyncingWeather} />
       {/* LURE POTENCY TRACKER */}
       <LureTrackerCard farm={farm} lang={lang} />
 

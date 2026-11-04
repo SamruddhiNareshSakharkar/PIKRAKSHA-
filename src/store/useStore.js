@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { farmsData } from '../data/farmsData';
 import { generateDailyActionPlan } from '../engine/actionPlanEngine';
 import { calculateExplainableRisk } from '../engine/riskEngine';
+import { fetchLiveWeatherData } from '../services/weatherService';
 
 const STORAGE_KEY = 'PIKRAKSHA_STORE_V4';
 
@@ -236,6 +237,49 @@ export const useStore = () => {
     }));
   };
 
+
+  const [isSyncingWeather, setIsSyncingWeather] = useState(false);
+
+  // Sync real-time weather from Open-Meteo & Mahavedh API
+  const syncLiveWeather = async (farmId) => {
+    const targetId = farmId || state.selectedFarmId;
+    const targetFarm = (state.farms || []).find(f => f.id === targetId) || currentFarm;
+    if (!targetFarm) return;
+
+    setIsSyncingWeather(true);
+    try {
+      const district = typeof targetFarm.location?.district === 'object'
+        ? targetFarm.location?.district?.en
+        : targetFarm.location?.district || 'Yavatmal';
+
+      const liveWeather = await fetchLiveWeatherData(district);
+      if (liveWeather) {
+        setState(prev => {
+          const updatedFarms = prev.farms.map(f => {
+            if (f.id === targetFarm.id) {
+              return {
+                ...f,
+                weather: {
+                  ...f.weather,
+                  ...liveWeather
+                }
+              };
+            }
+            return f;
+          });
+          return {
+            ...prev,
+            farms: updatedFarms
+          };
+        });
+      }
+    } catch (e) {
+      console.error('Failed to sync live weather:', e);
+    } finally {
+      setIsSyncingWeather(false);
+    }
+  };
+
   // Factory reset utility if ever needed
   const resetStore = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -258,6 +302,8 @@ export const useStore = () => {
     addNewFarm,
     sendBroadcastAdvisory,
     addTreatmentLog,
-    resetStore
+    resetStore,
+    syncLiveWeather,
+    isSyncingWeather
   };
 };

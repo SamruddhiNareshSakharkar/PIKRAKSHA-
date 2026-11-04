@@ -134,3 +134,4 @@ export default function MarketLinkView({ farm, lang, t }) {
     </div>
   );
 }
+

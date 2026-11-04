@@ -200,3 +200,4 @@ export default function CropCalendarView({ farm, lang, t }) {
     </div>
   );
 }
+

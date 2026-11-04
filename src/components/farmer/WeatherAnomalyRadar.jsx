@@ -1,19 +1,28 @@
 import React from 'react';
-import { CloudRain, Droplets, ThermometerSun, AlertTriangle, CheckCircle2, Wind } from 'lucide-react';
+import { CloudRain, Droplets, ThermometerSun, AlertTriangle, CheckCircle2, RefreshCw, Radio, Sparkles } from 'lucide-react';
 
-export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
+export default function WeatherAnomalyRadar({ 
+  farm, 
+  lang = 'en',
+  onSyncWeather,
+  isSyncingWeather = false
+}) {
   const currentHumidity = farm?.weather?.humidity || 78;
   const currentTemp = farm?.weather?.temp || 29.4;
   const minTemp = farm?.weather?.minTemp || 21.0;
+  const maxTemp = farm?.weather?.maxTemp || 32.8;
   const rainChance = farm?.weather?.rainChance || 25;
+  const isLiveSynced = farm?.weather?.isLiveSynced || false;
+  const lastSyncTime = farm?.weather?.lastSyncTime;
+  const weatherStation = farm?.weatherStation || farm?.weather?.weatherStation || 'Ner AWS (Mahavedh #43219)';
 
   const anomalies = [
     {
       id: "rh_surge",
       title: {
-        en: "Relative Humidity Anomaly (78% RH)",
-        mr: "हवेतील आर्द्रता वाढ (७८% RH)",
-        hi: "हवा में आर्द्रता वृद्धि (78% RH)"
+        en: `Relative Humidity (${currentHumidity}% RH)`,
+        mr: `हवेतील आर्द्रता (${currentHumidity}% RH)`,
+        hi: `हवा में आर्द्रता (${currentHumidity}% RH)`
       },
       status: currentHumidity >= 75 ? "warning" : "safe",
       metric: `${currentHumidity}%`,
@@ -29,13 +38,13 @@ export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
     {
       id: "nocturnal_temp",
       title: {
-        en: "Night-time Oviposition Temperature (21°C)",
-        mr: "रात्रीचे अनुकूल तापमान (२१°C)",
-        hi: "रात का अनुकूल तापमान (21°C)"
+        en: `Night-time Oviposition Temp (${minTemp}°C)`,
+        mr: `रात्रीचे तापमान (${minTemp}°C)`,
+        hi: `रात का तापमान (${minTemp}°C)`
       },
-      status: minTemp >= 20 && minTemp <= 26 ? "warning" : "safe",
+      status: minTemp >= 18 && minTemp <= 26 ? "warning" : "safe",
       metric: `${minTemp}°C`,
-      threshold: "20-25°C",
+      threshold: "18-26°C",
       cropEffect: {
         en: "Optimal egg-laying temperature for female moths (150-200 eggs/night).",
         mr: "मादी पतंगांसाठी सर्वाधिक अंडी घालण्याचे अनुकूल तापमान (१५०-२०० अंडी/रात्र).",
@@ -47,9 +56,9 @@ export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
     {
       id: "rain_trigger",
       title: {
-        en: "Unseasonal Rain & Wet Leaves Index",
-        mr: "अवकाळी पाऊस व पानांचा ओलावा निर्देशांक",
-        hi: "बेमौसम बारिश व पत्तों पर नमी सूचकांक"
+        en: `Precipitation Risk (${rainChance}%)`,
+        mr: `पाऊस व ओलावा निर्देशांक (${rainChance}%)`,
+        hi: `बारिश व नमी सूचकांक (${rainChance}%)`
       },
       status: rainChance >= 30 ? "warning" : "safe",
       metric: `${rainChance}%`,
@@ -66,24 +75,53 @@ export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
 
   return (
     <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-xs space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Header with live sync */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black">
             ⚡
           </div>
           <div>
-            <h3 className="text-sm font-extrabold text-slate-900">
-              {lang === 'mr' ? 'हवामान विकृती व कीड-रोग ट्रिगर रडार' : lang === 'hi' ? 'मौसम विसंगति व कीट-रोग ट्रिगर रडार' : 'Weather Anomaly & Disease Trigger Radar'}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-slate-900">
+                {lang === 'mr' ? 'हवामान विकृती व कीड-रोग ट्रिगर रडार' : lang === 'hi' ? 'मौसम विसंगति व कीट-रोग ट्रिगर रडार' : 'Weather Anomaly & Disease Trigger Radar'}
+              </h3>
+              {isLiveSynced && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  LIVE SATELLITE
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-500">
-              {lang === 'mr' ? 'महावेध (Mahavedh AWS) सूक्ष्म-हवामान बायो-मॉडेल' : 'Mahavedh automatic weather station biophysical triggers'}
+              {weatherStation} • {currentTemp}°C • {farm?.weather?.condition || 'Clear Sky'}
             </p>
           </div>
         </div>
-        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1">
-          <AlertTriangle className="w-3.5 h-3.5" />
-          {lang === 'mr' ? '२ हवामान धोके सक्रिय' : '2 Active Weather Triggers'}
-        </span>
+
+        {/* Live sync CTA */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {onSyncWeather && (
+            <button
+              onClick={onSyncWeather}
+              disabled={isSyncingWeather}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+              title="Query real-time meteorological API for this farm's latitude & longitude"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWeather ? 'animate-spin' : ''}`} />
+              <span>
+                {isSyncingWeather
+                  ? (lang === 'mr' ? 'अपडेट होत आहे...' : 'Syncing Live API...')
+                  : (lang === 'mr' ? 'थेट हवामान API रिफ्रेश' : 'Sync Live Weather API')}
+              </span>
+            </button>
+          )}
+
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1 shrink-0">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>2 Triggers</span>
+          </span>
+        </div>
       </div>
 
       {/* Grid of Anomalies */}
@@ -94,7 +132,7 @@ export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
             <div 
               key={item.id}
               className={`p-4 rounded-2xl border transition hover:shadow-xs space-y-2 ${
-                item.status === 'warning' ? 'bg-amber-50/60 border-amber-200' : 'bg-slate-50 border-slate-200'
+                item.status === 'warning' ? 'bg-amber-50/60 border-amber-200 ring-1 ring-amber-300/40' : 'bg-slate-50 border-slate-200'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -103,7 +141,7 @@ export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
                 </div>
                 <div className="text-right">
                   <span className="text-base font-black text-slate-900 block">{item.metric}</span>
-                  <span className="text-[10px] text-slate-500 font-medium">ETL {item.threshold}</span>
+                  <span className="text-[10px] text-slate-500 font-medium">Trigger {item.threshold}</span>
                 </div>
               </div>
 
@@ -118,7 +156,21 @@ export default function WeatherAnomalyRadar({ farm, lang = 'en' }) {
           );
         })}
       </div>
+
+      {/* API Provenance note */}
+      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-1.5">
+          <Radio className="w-3.5 h-3.5 text-emerald-600" />
+          <span>
+            <strong>Data Source:</strong> Open-Meteo Satellite Feed + Mahavedh State Automatic Weather Stations (AWS).
+          </span>
+        </div>
+        {lastSyncTime && (
+          <span className="text-slate-400 font-mono text-[10px]">
+            Synced: {lastSyncTime}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
-
