@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   ShieldCheck, 
@@ -14,84 +14,222 @@ import {
   ExternalLink
 } from 'lucide-react';
 
-export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
-  const [clusterFarmers, setClusterFarmers] = useState([
-    {
-      id: "wf_1",
-      name: "Kamalbai Rathod (कमलबाई राठोड)",
-      phone: "+91 98234 *****",
-      hasSmartphone: false,
-      crop: "Cotton (कापूस)",
-      acres: 2.0,
-      mothsCaught: 11,
-      threshold: 8,
-      status: "critical",
-      lastScouted: "Today (आज सकाळी)",
-      rosetteBollsFound: 6,
-      audioDelivered: true
+const CLUSTER_DATA_BY_REGION = {
+  pune: {
+    sakhiName: {
+      en: "Surekha Tai Shinde • Certified Pik Sakhi",
+      mr: "सुरेखाताई शिंदे • प्रमाणित पिक सखी",
+      hi: "सुरेखा ताई शिंदे • प्रमाणित पीक सखी"
     },
-    {
-      id: "wf_2",
-      name: "Anusaya Jadhav (अनुसया जाधव)",
-      phone: "+91 97654 *****",
-      hasSmartphone: true,
-      crop: "Cotton (कापूस)",
-      acres: 2.5,
-      mothsCaught: 4,
-      threshold: 8,
-      status: "safe",
-      lastScouted: "Yesterday (काल)",
-      rosetteBollsFound: 1,
-      audioDelivered: true
+    clusterTitle: {
+      en: "Baramati / Junnar Cluster, Pune • Jijau Mahila SHG (NRLM / MAVIM)",
+      mr: "बारामती / जुन्नर क्लस्टर, पुणे • जिजाऊ महिला बचत गट (NRLM / MAVIM)",
+      hi: "बारामती / जुन्नर क्लस्टर, पुणे • जिजाऊ महिला स्वयं सहायता समूह"
     },
-    {
-      id: "wf_3",
-      name: "Meerabai Chavan (मीराबाई चव्हाण)",
-      phone: "+91 94218 *****",
-      hasSmartphone: false,
-      crop: "Cotton (कापूस)",
-      acres: 3.0,
-      mothsCaught: 9,
-      threshold: 8,
-      status: "critical",
-      lastScouted: "Today (आज दुपारी)",
-      rosetteBollsFound: 8,
-      audioDelivered: false
+    farmers: [
+      {
+        id: "wf_p1",
+        name: "Shobhabai Patil (शोभाबाई पाटील)",
+        phone: "+91 98234 *****",
+        hasSmartphone: false,
+        crop: "Grapes (द्राक्ष)",
+        acres: 2.0,
+        mothsCaught: 6,
+        threshold: 5,
+        status: "critical",
+        lastScouted: "Today (आज सकाळी)",
+        rosetteBollsFound: 4,
+        audioDelivered: true
+      },
+      {
+        id: "wf_p2",
+        name: "Lata Gawade (लताताई गावडे)",
+        phone: "+91 97654 *****",
+        hasSmartphone: true,
+        crop: "Grapes (द्राक्ष)",
+        acres: 2.5,
+        mothsCaught: 3,
+        threshold: 5,
+        status: "safe",
+        lastScouted: "Yesterday (काल)",
+        rosetteBollsFound: 1,
+        audioDelivered: true
+      },
+      {
+        id: "wf_p3",
+        name: "Sunita Kolekar (सुनिता कोळेकर)",
+        phone: "+91 94218 *****",
+        hasSmartphone: false,
+        crop: "Grapes (द्राक्ष)",
+        acres: 3.0,
+        mothsCaught: 7,
+        threshold: 5,
+        status: "critical",
+        lastScouted: "Today (आज दुपारी)",
+        rosetteBollsFound: 5,
+        audioDelivered: false
+      },
+      {
+        id: "wf_p4",
+        name: "Shakuntala Jagtap (शकुंतला जगताप)",
+        phone: "+91 91583 *****",
+        hasSmartphone: false,
+        crop: "Grapes (द्राक्ष)",
+        acres: 1.5,
+        mothsCaught: 2,
+        threshold: 5,
+        status: "safe",
+        lastScouted: "2 days ago",
+        rosetteBollsFound: 0,
+        audioDelivered: true
+      }
+    ]
+  },
+  nashik: {
+    sakhiName: {
+      en: "Kavita Tai Gaikwad • Certified Pik Sakhi",
+      mr: "कविताताई गायकवाड • प्रमाणित पिक सखी",
+      hi: "कविता ताई गायकवाड़ • प्रमाणित पीक सखी"
     },
-    {
-      id: "wf_4",
-      name: "Shantabai Pawar (शांताबाई पवार)",
-      phone: "+91 91583 *****",
-      hasSmartphone: false,
-      crop: "Cotton (कापूस)",
-      acres: 1.5,
-      mothsCaught: 5,
-      threshold: 8,
-      status: "safe",
-      lastScouted: "2 days ago",
-      rosetteBollsFound: 2,
-      audioDelivered: true
+    clusterTitle: {
+      en: "Dindori Cluster, Nashik • Kranti Mahila SHG (NRLM / MAVIM)",
+      mr: "दिंडोरी क्लस्टर, नाशिक • क्रांती महिला बचत गट (NRLM / MAVIM)",
+      hi: "दिंडोरी क्लस्टर, नासिक • क्रांति महिला स्वयं सहायता समूह"
     },
-    {
-      id: "wf_5",
-      name: "Kavita Meshram (कविता मेश्राम)",
-      phone: "+91 96041 *****",
-      hasSmartphone: true,
-      crop: "Soybean / Cotton",
-      acres: 2.0,
-      mothsCaught: 3,
-      threshold: 8,
-      status: "safe",
-      lastScouted: "3 days ago",
-      rosetteBollsFound: 0,
-      audioDelivered: true
-    }
-  ]);
+    farmers: [
+      {
+        id: "wf_n1",
+        name: "Usha Gangurde (उषाबाई गांगुर्डे)",
+        phone: "+91 98221 *****",
+        hasSmartphone: false,
+        crop: "Grapes / Onion",
+        acres: 2.5,
+        mothsCaught: 7,
+        threshold: 5,
+        status: "critical",
+        lastScouted: "Today",
+        rosetteBollsFound: 5,
+        audioDelivered: true
+      },
+      {
+        id: "wf_n2",
+        name: "Suman Bhalerao (सुमन भालेराव)",
+        phone: "+91 98222 *****",
+        hasSmartphone: true,
+        crop: "Grapes (द्राक्ष)",
+        acres: 3.0,
+        mothsCaught: 3,
+        threshold: 5,
+        status: "safe",
+        lastScouted: "Yesterday",
+        rosetteBollsFound: 0,
+        audioDelivered: true
+      }
+    ]
+  },
+  yavatmal: {
+    sakhiName: {
+      en: "Sunita Tai Rathod • Certified Pik Sakhi",
+      mr: "सुनीताताई राठोड • प्रमाणित पिक सखी",
+      hi: "सुनीता ताई राठौड़ • प्रमाणित पीक सखी"
+    },
+    clusterTitle: {
+      en: "Ner Cluster, Yavatmal • Mahalakshmi SHG (NRLM / MAVIM)",
+      mr: "नेर क्लस्टर, यवतमाळ • महालक्ष्मी महिला बचत गट (NRLM / MAVIM)",
+      hi: "नेर क्लस्टर, यवतमाल • महालक्ष्मी महिला स्वयं सहायता समूह"
+    },
+    farmers: [
+      {
+        id: "wf_1",
+        name: "Kamalbai Rathod (कमलबाई राठोड)",
+        phone: "+91 98234 *****",
+        hasSmartphone: false,
+        crop: "Cotton (कापूस)",
+        acres: 2.0,
+        mothsCaught: 11,
+        threshold: 8,
+        status: "critical",
+        lastScouted: "Today (आज सकाळी)",
+        rosetteBollsFound: 6,
+        audioDelivered: true
+      },
+      {
+        id: "wf_2",
+        name: "Anusaya Jadhav (अनुसया जाधव)",
+        phone: "+91 97654 *****",
+        hasSmartphone: true,
+        crop: "Cotton (कापूस)",
+        acres: 2.5,
+        mothsCaught: 4,
+        threshold: 8,
+        status: "safe",
+        lastScouted: "Yesterday (काल)",
+        rosetteBollsFound: 1,
+        audioDelivered: true
+      },
+      {
+        id: "wf_3",
+        name: "Meerabai Chavan (मीराबाई चव्हाण)",
+        phone: "+91 94218 *****",
+        hasSmartphone: false,
+        crop: "Cotton (कापूस)",
+        acres: 3.0,
+        mothsCaught: 9,
+        threshold: 8,
+        status: "critical",
+        lastScouted: "Today (आज दुपारी)",
+        rosetteBollsFound: 8,
+        audioDelivered: false
+      },
+      {
+        id: "wf_4",
+        name: "Shantabai Pawar (शांताबाई पवार)",
+        phone: "+91 91583 *****",
+        hasSmartphone: false,
+        crop: "Cotton (कापूस)",
+        acres: 1.5,
+        mothsCaught: 5,
+        threshold: 8,
+        status: "safe",
+        lastScouted: "2 days ago",
+        rosetteBollsFound: 2,
+        audioDelivered: true
+      }
+    ]
+  }
+};
 
-  const [selectedFarmerId, setSelectedFarmerId] = useState('wf_1');
+export default function PikSakhiHubView({ farm, lang = 'en', onPlayAudio }) {
+  const villageStr = typeof farm?.location?.village === 'object'
+    ? (farm?.location?.village?.[lang] || farm?.location?.village?.en || 'Ner')
+    : (farm?.location?.village || 'Ner');
+
+  const districtStr = typeof farm?.location?.district === 'object'
+    ? (farm?.location?.district?.[lang] || farm?.location?.district?.en || 'Yavatmal')
+    : (farm?.location?.district || 'Yavatmal');
+
+  const distLower = districtStr.toLowerCase();
+  const villLower = villageStr.toLowerCase();
+
+  const regionKey = (distLower.includes('pune') || villLower.includes('baramati') || villLower.includes('junnar')) ? 'pune'
+    : (distLower.includes('nashik') || villLower.includes('dindori')) ? 'nashik'
+    : 'yavatmal';
+
+  const regionalMeta = CLUSTER_DATA_BY_REGION[regionKey] || CLUSTER_DATA_BY_REGION.yavatmal;
+
+  const [clusterFarmers, setClusterFarmers] = useState(regionalMeta.farmers);
+  const [selectedFarmerId, setSelectedFarmerId] = useState(regionalMeta.farmers[0]?.id || 'wf_1');
   const [newMothCount, setNewMothCount] = useState('');
   const [newRosetteCount, setNewRosetteCount] = useState('');
   const [showAddLogModal, setShowAddLogModal] = useState(false);
+
+  useEffect(() => {
+    setClusterFarmers(regionalMeta.farmers);
+    setSelectedFarmerId(regionalMeta.farmers[0]?.id || 'wf_1');
+  }, [regionKey]);
+
+  const sakhiDisplayName = regionalMeta.sakhiName[lang] || regionalMeta.sakhiName.en;
+  const clusterDisplayTitle = `${villageStr} Cluster, ${districtStr} • ${lang === 'mr' ? 'महिला बचत गट (NRLM / MAVIM)' : 'Self-Help Group (NRLM / MAVIM)'}`;
 
   const handleLogScouting = (e) => {
     e.preventDefault();
@@ -105,7 +243,7 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
           mothsCaught: count,
           rosetteBollsFound: rosette,
           status: count >= f.threshold ? "critical" : "safe",
-          lastScouted: "Just now (आत्ताच नोंदवले)",
+          lastScouted: lang === 'mr' ? "आत्ताच नोंदवले" : "Just now",
           audioDelivered: true
         };
       }
@@ -132,10 +270,10 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
                 {lang === 'mr' ? 'महिला संवर्ग विशेष • कृषी सखी नेटवर्क' : 'Women Category Exclusive • Krishi Sakhi Network'}
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
-                {lang === 'mr' ? 'सुनीताताई राठोड • प्रमाणित पिक सखी' : 'Sunita Tai Rathod • Certified Pik Sakhi'}
+                {sakhiDisplayName}
               </h2>
               <p className="text-xs text-purple-200 font-medium">
-                {lang === 'mr' ? 'नेर शिवार, यवतमाळ • महालक्ष्मी महिला बचत गट (NRLM / MAVIM)' : 'Ner Cluster, Yavatmal • Mahalakshmi SHG (NRLM / MAVIM)'}
+                {clusterDisplayTitle}
               </p>
             </div>
           </div>
@@ -153,7 +291,7 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
             </div>
             <button
               onClick={() => setShowAddLogModal(true)}
-              className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-forest-950 text-xs font-black flex items-center gap-1.5 shadow-lg transition"
+              className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-forest-950 text-xs font-black flex items-center gap-1.5 shadow-lg transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               {lang === 'mr' ? 'पाहणी नोंदवा' : 'Log Scouting'}
@@ -167,11 +305,11 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
           <p className="leading-relaxed">
             {lang === 'mr' ? (
               <>
-                <strong>डिजिटल दरीवर उपाय (NSO 2025 अहवाल):</strong> महाराष्ट्रातील <strong>५१.६% ग्रामीण महिलांकडे स्वतःचा स्मार्टफोन नाही</strong>. पीकरक्षा प्रणालीमध्ये प्रत्येक गावात प्रशिक्षित 'पिक सखी' १० ते १५ महिला शेतकऱ्यांच्या शेतातील सापळ्यांची पाहणी करून थेट मराठी ध्वनी संदेश त्यांच्या कुटुंबीयांपर्यंत पोहोचवते.
+                <strong>डिजिटल दरीवर उपाय (NSO २०२५ अहवाल):</strong> महाराष्ट्रातील <strong>५१.६% ग्रामीण महिलांकडे स्वतःचा स्मार्टफोन नाही</strong>. पीकरक्षा प्रणालीमध्ये <strong>{villageStr}</strong> गावातील प्रशिक्षित 'पिक सखी' १० ते १५ महिला शेतकऱ्यांच्या शेतातील सापळ्यांची पाहणी करून थेट मराठी ध्वनी संदेश त्यांच्या कुटुंबीयांपर्यंत पोहोचवते.
               </>
             ) : (
               <>
-                <strong>Bridging the Digital Divide (NSO 2025 Data):</strong> Over <strong>51.6% of rural women in Maharashtra do not own a smartphone</strong>. PIKRAKSHA's Pik Sakhi model empowers trained women para-extension workers to scout 10–15 women-headed plots and bridge the digital gap via in-person visits and audio bulletins.
+                <strong>Bridging the Digital Divide (NSO 2025 Data):</strong> Over <strong>51.6% of rural women in Maharashtra do not own a smartphone</strong>. In <strong>{villageStr}</strong>, PIKRAKSHA's local Pik Sakhi visits women-headed plots and bridges the digital gap through in-person audits and regional audio bulletins.
               </>
             )}
           </p>
@@ -183,14 +321,14 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-extrabold text-slate-900">
-              {lang === 'mr' ? 'पिक सखी क्लस्टर सदस्य शेतकरी (१२ महिला शेतकरी गट)' : 'Cluster Member Farmers (12 Women Farmers Group)'}
+              {lang === 'mr' ? `${villageStr} क्लस्टर सदस्य शेतकरी महिला गट` : `${villageStr} Cluster Member Farmers Group`}
             </h3>
             <p className="text-xs text-slate-500">
-              {lang === 'mr' ? 'सापळा संख्या व डोमकळी प्रत्यक्ष शेत तपासणी अहवाल' : 'Pheromone trap catches & rosette flower field inspection logs'}
+              {lang === 'mr' ? 'सापळा संख्या व प्रत्यक्ष शेत तपासणी अहवाल' : 'Pheromone trap catches & field inspection logs'}
             </p>
           </div>
           <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-800 text-xs font-extrabold border border-purple-200 self-start sm:self-auto">
-            {lang === 'mr' ? '२ शेतात आर्थिक नुकसान पातळी ओलांडली' : '2 Farms Exceeded Threshold'}
+            {lang === 'mr' ? 'स्थानिक महिला बचत गट (NRLM)' : 'Local Women SHG Cluster'}
           </span>
         </div>
 
@@ -217,10 +355,10 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-0.5">
                     <span>{farmer.crop}</span>
                     <span>•</span>
-                    <span>तपासणी: {farmer.lastScouted}</span>
+                    <span>{lang === 'mr' ? 'तपासणी' : 'Audited'}: {farmer.lastScouted}</span>
                     <span>•</span>
                     <span className={farmer.rosetteBollsFound > 3 ? "text-red-600 font-bold" : ""}>
-                      {farmer.rosetteBollsFound} डोमकळ्या नष्ट केल्या
+                      {farmer.rosetteBollsFound} {lang === 'mr' ? 'कीडग्रस्त फुले नष्ट केली' : 'infested parts destroyed'}
                     </span>
                   </div>
                 </div>
@@ -230,19 +368,23 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
               <div className="flex items-center gap-3 self-end md:self-auto">
                 <div className="text-right">
                   <div className={`text-sm font-black ${farmer.status === 'critical' ? 'text-red-600' : 'text-slate-800'}`}>
-                    {farmer.mothsCaught} / {farmer.threshold} पतंग
+                    {farmer.mothsCaught} / {farmer.threshold} {lang === 'mr' ? 'पतंग' : 'moths'}
                   </div>
                   <span className={`text-[10px] font-bold ${farmer.status === 'critical' ? 'text-red-700' : 'text-emerald-700'}`}>
-                    {farmer.status === 'critical' ? 'धोकादायक पातळी' : 'सुरक्षित'}
+                    {farmer.status === 'critical' ? (lang === 'mr' ? 'धोकादायक पातळी' : 'Critical') : (lang === 'mr' ? 'सुरक्षित' : 'Safe')}
                   </span>
                 </div>
 
                 <button
-                  onClick={() => onPlayAudio && onPlayAudio(`शेतकरी भगिनी ${farmer.name} यांच्या शेतात आज ${farmer.mothsCaught} पतंग आढळले आहेत. कृपया लगेच डोमकळ्या तोडून निंबोळी अर्काची फवारणी करावी.`)}
-                  className="px-3 py-1.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 text-xs font-bold flex items-center gap-1.5 transition"
+                  onClick={() => onPlayAudio && onPlayAudio(
+                    lang === 'mr' 
+                      ? `${farmer.name} यांच्या शेतात आज ${farmer.mothsCaught} पतंग सापडले असून पीक सुरक्षित राखण्यासाठी तातडीने सेंद्रिय निमार्क फवारणी करावी.`
+                      : `Alert for ${farmer.name}. ${farmer.mothsCaught} moths recorded today. Timely biological spray advised.`
+                  )}
+                  className="p-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition"
+                  title="Play Marathi Audio Bulletin"
                 >
-                  <Volume2 className="w-3.5 h-3.5 text-purple-700" />
-                  {lang === 'mr' ? 'ध्वनी संदेश पाठवा' : 'Send Audio'}
+                  <Volume2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -250,75 +392,77 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
         </div>
       </div>
 
-      {/* 3. LOG SCOUTING MODAL */}
+      {/* Log Scouting Modal */}
       {showAddLogModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-            <h3 className="text-base font-black text-slate-900">
-              {lang === 'mr' ? 'पिक सखी शेत तपासणी नोंद' : 'Log Field Scouting as Pik Sakhi'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-2xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-purple-100">
+            <h3 className="text-lg font-black text-slate-900">
+              {lang === 'mr' ? 'नवीन शेत पाहणी नोंदवा (पिक सखी)' : 'Log Field Scouting (Pik Sakhi)'}
             </h3>
-
-            <form onSubmit={handleLogScouting} className="space-y-4 text-xs font-semibold">
+            <p className="text-xs text-slate-600">
+              {lang === 'mr' ? 'कोणत्या महिला शेतकऱ्याच्या शेताची पाहणी केली ते निवडा:' : 'Select farmer and enter field trap inspection count:'}
+            </p>
+            <form onSubmit={handleLogScouting} className="space-y-4">
               <div>
-                <label className="block text-slate-700 mb-1">
-                  {lang === 'mr' ? 'शेतकरी निवडा:' : 'Select Cluster Farmer:'}
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  {lang === 'mr' ? 'शेतकरी महिला निवडा:' : 'Select Farmer:'}
                 </label>
-                <select 
+                <select
                   value={selectedFarmerId}
                   onChange={(e) => setSelectedFarmerId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {clusterFarmers.map(f => (
-                    <option key={f.id} value={f.id}>{f.name} ({f.acres} एकर)</option>
+                    <option key={f.id} value={f.id}>{f.name} ({f.crop})</option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-slate-700 mb-1">
-                  {lang === 'mr' ? 'कामगंध सापळ्यातील आजचे पतंग:' : 'Pheromone Trap Catch Today:'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="60"
-                  required
-                  value={newMothCount}
-                  onChange={(e) => setNewMothCount(e.target.value)}
-                  placeholder="उदा. 10 पतंग"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 mb-1">
-                  {lang === 'mr' ? '२० बोंडांपैकी आढळलेल्या डोमकळ्या (Rosette Flowers):' : 'Damaged / Rosette Flowers Found (in 20 plants):'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="20"
-                  required
-                  value={newRosetteCount}
-                  onChange={(e) => setNewRosetteCount(e.target.value)}
-                  placeholder="उदा. 5 डोमकळ्या"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-sm"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {lang === 'mr' ? 'सापळ्यातील पतंग:' : 'Moths Caught:'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={newMothCount}
+                    onChange={(e) => setNewMothCount(e.target.value)}
+                    placeholder="उदा. 8"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    {lang === 'mr' ? 'कीडग्रस्त फुले नष्ट:' : 'Infested Parts:'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={newRosetteCount}
+                    onChange={(e) => setNewRosetteCount(e.target.value)}
+                    placeholder="उदा. 4"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddLogModal(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
                 >
-                  रद्द करा (Cancel)
+                  {lang === 'mr' ? 'रद्द करा' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold shadow-md"
+                  className="px-5 py-2.5 rounded-xl text-xs font-black bg-purple-700 hover:bg-purple-800 text-white shadow-md transition"
                 >
-                  नोंद जतन करा व ऑडिओ पाठवा
+                  {lang === 'mr' ? 'पाहणी जतन करा (Save)' : 'Save Scouting Log'}
                 </button>
               </div>
             </form>
@@ -328,4 +472,3 @@ export default function PikSakhiHubView({ lang = 'en', onPlayAudio }) {
     </div>
   );
 }
-

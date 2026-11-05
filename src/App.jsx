@@ -281,6 +281,7 @@ export default function App() {
 
               {farmerTab === 'pik-sakhi' && (
                 <PikSakhiHubView
+                  farm={currentFarm}
                   lang={lang}
                   onPlayAudio={handlePlayAudio}
                 />
@@ -410,6 +411,7 @@ export default function App() {
 
               {officerTab === 'sakhi-surveillance' && (
                 <PikSakhiHubView
+                  farm={currentFarm}
                   lang={lang}
                   onPlayAudio={handlePlayAudio}
                 />
