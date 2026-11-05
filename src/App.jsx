@@ -66,6 +66,7 @@ export default function App() {
     logTrapCatch,
     toggleActionTask,
     verifyDiagnosisSubmission,
+    addFarmerSubmission,
     addNewFarm,
     addTreatmentLog,
     addCustomActionTask,
@@ -300,6 +301,9 @@ export default function App() {
 
               {farmerTab === 'scanner' && (
                 <DiagnoseView
+                  farm={currentFarm}
+                  currentUser={currentUser}
+                  onSubmitToOfficer={addFarmerSubmission}
                   lang={lang}
                   t={t}
                   onPlayAudio={handlePlayAudio}

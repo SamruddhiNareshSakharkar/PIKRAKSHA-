@@ -363,6 +363,23 @@ export const useStore = () => {
     });
   };
 
+  // Submit new farmer AI diagnosis to officer verification queue
+  const addFarmerSubmission = (newSub) => {
+    setState(prev => ({
+      ...prev,
+      farmerSubmissions: [
+        {
+          id: `sub_${Date.now()}`,
+          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          status: 'pending',
+          officerNotes: '',
+          ...newSub
+        },
+        ...(prev.farmerSubmissions || [])
+      ]
+    }));
+  };
+
   // Verify or reject diagnosis submission
   const verifyDiagnosisSubmission = (subId, status, notes) => {
     setState(prev => ({
@@ -550,6 +567,7 @@ export const useStore = () => {
     logTrapCatch,
     toggleActionTask,
     verifyDiagnosisSubmission,
+    addFarmerSubmission,
     addNewFarm,
     sendBroadcastAdvisory,
     addTreatmentLog,

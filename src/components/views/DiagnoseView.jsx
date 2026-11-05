@@ -14,11 +14,12 @@ import {
   ArrowRight,
   Maximize2,
   ScanLine,
+  Send,
   Image as ImageIcon
 } from 'lucide-react';
 import { sampleDiagnoses } from '../../data/diagnosisData';
 
-export default function DiagnoseView({ lang = 'en', t, onPlayAudio, isPlayingAudio }) {
+export default function DiagnoseView({ farm, currentUser, onSubmitToOfficer, lang = 'en', t, onPlayAudio, isPlayingAudio }) {
   const [selectedSample, setSelectedSample] = useState(sampleDiagnoses[0]);
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [customImage, setCustomImage] = useState(null);
@@ -26,6 +27,8 @@ export default function DiagnoseView({ lang = 'en', t, onPlayAudio, isPlayingAud
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState('');
   const [tickedSymptoms, setTickedSymptoms] = useState({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -73,6 +76,32 @@ export default function DiagnoseView({ lang = 'en', t, onPlayAudio, isPlayingAud
       ...prev,
       [index]: !prev[index]
     }));
+  };
+
+  const handleSubmitQueryToOfficer = () => {
+    if (!onSubmitToOfficer) return;
+    setIsSubmitting(true);
+
+    const fName = currentUser?.name || (typeof farm?.farmerName === 'object' ? farm.farmerName.en : farm?.farmerName) || 'Farmer';
+    const vName = (typeof farm?.location?.village === 'object' ? farm.location.village.en : farm?.location?.village) || 'Field';
+    const dName = (typeof farm?.location?.district === 'object' ? farm.location.district.en : farm?.location?.district) || 'Yavatmal';
+    const cropName = selectedSample.crop || (typeof farm?.crop?.name === 'object' ? farm.crop.name.en : farm?.crop?.name) || 'Crop';
+    const pest = selectedSample.diseaseName[currentLang] || selectedSample.diseaseName.en;
+
+    setTimeout(() => {
+      onSubmitToOfficer({
+        farmerName: fName,
+        village: `${vName}, ${dName}`,
+        crop: cropName,
+        photoName: customImageName || `${selectedSample.id}.jpg`,
+        suspectedPest: `${pest} (${selectedSample.confidence}% AI)`,
+        aiConfidence: selectedSample.confidence,
+        sampleBg: selectedSample.id === 'sample-pbw' ? 'linear-gradient(135deg, #2e5939 0%, #17341e 100%)' : 'linear-gradient(135deg, #3d5a45 0%, #203829 100%)',
+        icon: selectedSample.id === 'sample-pbw' ? '🌸' : selectedSample.id === 'sample-dm' ? '🍇' : '🍅'
+      });
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+    }, 600);
   };
 
   // SVG Artwork generators for high-realism crop specimens when no custom photo is uploaded
@@ -451,6 +480,48 @@ export default function DiagnoseView({ lang = 'en', t, onPlayAudio, isPlayingAud
                 </div>
               ))}
             </div>
+          </div>
+
+                    {/* Human-In-The-Loop Expert Verification Dispatch */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🏛️</span>
+                <div>
+                  <h5 className="text-xs font-black text-slate-900">
+                    {lang === 'mr' ? 'तालुका कृषी अधिकाऱ्याकडे पडताळणीसाठी पाठवा' : 'Human-in-the-Loop Expert Verification'}
+                  </h5>
+                  <p className="text-[11px] text-slate-600">
+                    {lang === 'mr' ? 'AI निदानावर शंका असल्यास कृषी सहाय्यक स्वतः तपासणी करून अधिकृत सल्ला पाठवतील.' : 'Submit AI scan to Taluka Agronomist for official validation and field inspection.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {isSubmitted ? (
+              <div className="p-3 rounded-xl bg-emerald-100 border border-emerald-300 text-xs font-bold text-emerald-950 flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span>
+                  {lang === 'mr'
+                    ? 'नोंद यशस्वी! कृषी अधिकारी डॉ. व्ही. के. देशमुख यांच्या तपासणी कक्षामध्ये ही शंका पाठवली गेली आहे.'
+                    : 'Dispatched! Your query has been queued for official human review on the Agriculture Officer Desk.'}
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmitQueryToOfficer}
+                disabled={isSubmitting}
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>
+                  {isSubmitting 
+                    ? (lang === 'mr' ? 'पाठवत आहे...' : 'Dispatching...') 
+                    : (lang === 'mr' ? 'कृषी अधिकाऱ्याकडे अधिकृत मंजुरीसाठी पाठवा' : 'Submit Photo to Officer for Verification')}
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Commercial Brand Prohibition Note */}
