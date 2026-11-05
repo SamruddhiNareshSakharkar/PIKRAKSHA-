@@ -429,9 +429,87 @@ export const useStore = () => {
     setState(prev => {
       const targetPortal = user.role === 'officer' ? 'officer' : 'farmer';
       const targetFarmerTab = user.role === 'pik_sakhi' ? 'pik-sakhi' : 'dashboard';
-      const targetFarmId = user.farmId || prev.selectedFarmId;
+      let targetFarmId = user.farmId || prev.selectedFarmId;
+      let updatedFarms = [...prev.farms];
+      let updatedTrapCounts = { ...prev.trapCounts };
+      let updatedActionTasks = { ...prev.actionTasks };
+
+      // If user registered a new farm that is not in the list, create it dynamically!
+      const farmExists = updatedFarms.some(f => f.id === targetFarmId);
+      if (!farmExists && user.role !== 'officer') {
+        const cropStr = user.crop || 'Cotton';
+        const isCotton = cropStr.toLowerCase().includes('cotton') || cropStr.includes('कापूस');
+        const isGrapes = cropStr.toLowerCase().includes('grape') || cropStr.includes('द्राक्ष');
+        const isTomato = cropStr.toLowerCase().includes('tomato') || cropStr.includes('टोमॅटो');
+        const pestName = isGrapes ? 'Downy Mildew' : isTomato ? 'Late Blight' : 'Pink bollworm';
+
+        const createdFarm = {
+          id: targetFarmId,
+          farmerName: user.name,
+          location: {
+            village: user.villageName || user.village || 'Field',
+            district: user.district || 'Yavatmal',
+            state: 'Maharashtra'
+          },
+          crop: {
+            name: cropStr,
+            stage: 'Active Growth',
+            das: 75,
+            acres: 3.0
+          },
+          primaryAlert: {
+            severity: 'moderate',
+            pestName: pestName,
+            peakText: 'Active biological monitoring recommended for your new parcel.',
+            trapStatusText: 'Initial pheromone traps active. Log your counts daily to establish baseline.',
+            audioText: {
+              en: `Welcome ${user.name}. Your farm in ${user.village || 'your village'} is now actively monitored by PIKRAKSHA.`,
+              mr: `नमस्कार ${user.name}. आपल्या ${user.village || 'गावातील'} शेतावर पीकरक्षा पूर्वसूचना प्रणाली सक्रिय झाली आहे.`
+            }
+          },
+          threatsList: [
+            {
+              id: 't_new_1',
+              name: pestName,
+              level: 'Moderate',
+              levelMr: 'मध्यम',
+              levelHi: 'मध्यम',
+              desc: 'Early vegetative window. Keep pheromone traps monitored daily.',
+              bars: [0.3, 0.4, 0.4, 0.5, 0.5, 0.4, 0.4]
+            }
+          ],
+          threatsSummary: { high: 0, moderate: 1, low: 2 },
+          ipmSteps: [
+            'Install 5 pheromone traps per hectare at crop canopy level.',
+            'Maintain bird perches and inspect 20 plants weekly.',
+            'Spray 5% Neem Seed Kernel Extract (NSKE) as preventative botanical barrier.'
+          ],
+          trapData: {
+            trapType: 'Pheromone Funnel Trap',
+            history: [2, 3, 3, 4, 3, 4, 4],
+            threshold: isCotton ? 8 : 5,
+            lureType: isCotton ? 'Gossyplure' : 'Standard Pheromone',
+            daysInField: 5
+          },
+          weather: {
+            temp: 28.5,
+            minTemp: 21.0,
+            humidity: 72,
+            windSpeed: 8,
+            precipitation: 0
+          }
+        };
+
+        updatedFarms.push(createdFarm);
+        updatedTrapCounts[targetFarmId] = [2, 3, 3, 4, 3, 4, 4];
+        updatedActionTasks[targetFarmId] = generateDailyActionPlan(createdFarm, calculateExplainableRisk(createdFarm));
+      }
+
       return {
         ...prev,
+        farms: updatedFarms,
+        trapCounts: updatedTrapCounts,
+        actionTasks: updatedActionTasks,
         currentUser: {
           ...user,
           isLoggedIn: true

@@ -242,8 +242,11 @@ export default function LoginPage({ onLogin, lang = 'en', setLang }) {
       crop: regRole !== 'officer' ? regCrop : undefined,
       title: regRole === 'officer' ? (regTitle.trim() || 'Agriculture Officer (कृषी अधिकारी)') : (regRole === 'pik_sakhi' ? 'Pik Sakhi (पीक सखी)' : undefined),
       village: regRole === 'officer' ? `${regDistrict} Division` : `${regVillage.trim()}, ${regDistrict}`,
+      villageName: regVillage.trim(),
+      district: regDistrict,
       phone: regPhone,
-      farmId: farmId
+      farmId: farmId,
+      isNewRegistration: true
     };
 
     onLogin(newUser);
