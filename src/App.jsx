@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 
 // Farmer Views
+import LoginPage from './components/views/LoginPage';
 import MyFarmView from './components/views/MyFarmView';
 import RiskForecastView from './components/views/RiskForecastView';
 import WhyAtRiskView from './components/farmer/WhyAtRiskView';
@@ -107,6 +108,17 @@ export default function App() {
     );
   };
 
+  // Render Phone OTP Login Page if user is not authenticated
+  if (!currentUser?.isLoggedIn) {
+    return (
+      <LoginPage
+        onLogin={loginUser}
+        lang={lang}
+        setLang={setLang}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAF8] text-slate-900 flex font-sans selection:bg-emerald-200">
       {/* Desktop Navigation Sidebar */}
@@ -171,6 +183,7 @@ export default function App() {
           onOpenAudio={() => setIsVoiceModalOpen(true)}
           onAddNewFarm={() => setIsNewFarmModalOpen(true)}
           currentUser={currentUser}
+          onLogout={logoutUser}
           onOpenLoginModal={() => setIsLoginModalOpen(true)}
         />
 

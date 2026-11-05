@@ -10,7 +10,7 @@ import {
   getCachedWeatherData 
 } from '../services/weatherService';
 
-const STORAGE_KEY = 'PIKRAKSHA_STORE_V6';
+const STORAGE_KEY = 'PIKRAKSHA_STORE_V7';
 
 const defaultState = {
   portal: 'farmer', // 'farmer' | 'officer'
@@ -27,7 +27,7 @@ const defaultState = {
     village: 'Ner, Yavatmal',
     phone: '9822012345',
     farmId: 'farm-1',
-    isLoggedIn: true
+    isLoggedIn: false
   },
   farms: farmsData,
   trapCounts: {
@@ -165,7 +165,7 @@ const getInitialState = () => {
             farmerTab: parsed.farmerTab || 'dashboard',
             officerTab: parsed.officerTab || 'overview',
             selectedFarmId: parsed.selectedFarmId || 'farm-1',
-            currentUser: parsed.currentUser || defaultState.currentUser,
+            currentUser: { ...(parsed.currentUser || defaultState.currentUser), isLoggedIn: false },
             farms: parsed.farms,
             trapCounts: { ...defaultState.trapCounts, ...(parsed.trapCounts || {}) },
             actionTasks: mergedTasks,

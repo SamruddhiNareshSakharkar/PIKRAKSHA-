@@ -1,13 +1,11 @@
 import React from 'react';
 import { 
-  CloudSun, 
   Volume2, 
   Share2, 
   Plus, 
   Award, 
   Building2, 
-  UserCheck, 
-  Sparkles,
+  LogOut,
   MapPin
 } from 'lucide-react';
 
@@ -23,7 +21,8 @@ export default function Header({
   onOpenAudio, 
   onAddNewFarm,
   currentUser,
-  onOpenLoginModal
+  onOpenLoginModal,
+  onLogout
 }) {
   const currentFarm = (farms && farms.find(f => f && f.id === selectedFarmId)) || (farms && farms[0]) || {};
   
@@ -31,6 +30,13 @@ export default function Header({
     ? (currentFarm.farmerName[lang] || currentFarm.farmerName.en || 'Farmer') 
     : (currentFarm?.farmerName || 'Farmer');
   const farmerInitial = String(rawFarmerName).charAt(0) || 'F';
+
+  // Role-based portal visibility
+  const userRole = currentUser?.role || 'farmer';
+  const showFarmerPortal = userRole === 'farmer' || userRole === 'pik_sakhi';
+  const showOfficerPortal = userRole === 'officer';
+  // If only one portal is available, no need for toggle
+  const showPortalToggle = !showFarmerPortal || !showOfficerPortal; // always true since roles are exclusive
 
   const handleShareWhatsApp = () => {
     const fName = typeof currentFarm?.farmerName === 'object' ? (currentFarm.farmerName[lang] || currentFarm.farmerName.en) : (currentFarm?.farmerName || '');
@@ -54,7 +60,7 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-2xs">
-      {/* 3 Core Pitch Deck Commitments Banner (1,000 farms | 2-7 days early | ₹0 cost) */}
+      {/* 3 Core Pitch Deck Commitments Banner */}
       <div className="bg-gradient-to-r from-[#0d2218] via-forest-850 to-[#091a12] text-white text-[11px] px-4 sm:px-6 py-1.5 flex flex-wrap items-center justify-between gap-2 border-b border-emerald-900">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 font-bold text-amber-300">
@@ -65,7 +71,6 @@ export default function Header({
           <span className="text-emerald-200">Women Category • Agriculture</span>
         </div>
 
-        {/* 3 Targets prominently displayed (User Section 6 Request) */}
         <div className="flex items-center gap-3 text-[10px] text-emerald-200">
           <span className="font-semibold text-white">🎯 Targets:</span>
           <span><strong>1,000</strong> Pilot Farms</span>
@@ -78,31 +83,28 @@ export default function Header({
 
       {/* Main Bar */}
       <div className="px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Dual Portal Switcher (Farmer vs Agriculture Officer) */}
+        {/* Left: Portal label (role-based, NO toggle) + Farm Switcher */}
         <div className="flex items-center gap-3 flex-wrap">
+          
+          {/* Show ONLY the portal that matches the logged-in role */}
           <div className="inline-flex rounded-xl border border-slate-300 bg-slate-100 p-0.5 shadow-2xs">
-            <button
-              onClick={() => setPortal('farmer')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                portal === 'farmer'
-                  ? 'bg-forest-850 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span>👨‍🌾</span>
-              <span>{lang === 'mr' ? 'शेतकरी पोर्टल' : lang === 'hi' ? 'किसान पोर्टल' : 'Farmer Portal'}</span>
-            </button>
-            <button
-              onClick={() => setPortal('officer')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                portal === 'officer'
-                  ? 'bg-forest-850 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{lang === 'mr' ? 'कृषी अधिकारी पोर्टल' : lang === 'hi' ? 'कृषि अधिकारी पोर्टल' : 'Officer Portal'}</span>
-            </button>
+            {showFarmerPortal && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-forest-850 text-white shadow-xs">
+                <span>{userRole === 'pik_sakhi' ? '👩‍🌾' : '👨‍🌾'}</span>
+                <span>
+                  {userRole === 'pik_sakhi'
+                    ? (lang === 'mr' ? 'पीक सखी पोर्टल' : 'Pik Sakhi Portal')
+                    : (lang === 'mr' ? 'शेतकरी पोर्टल' : lang === 'hi' ? 'किसान पोर्टल' : 'Farmer Portal')
+                  }
+                </span>
+              </div>
+            )}
+            {showOfficerPortal && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-forest-850 text-white shadow-xs">
+                <Building2 className="w-3.5 h-3.5 text-emerald-300" />
+                <span>{lang === 'mr' ? 'कृषी अधिकारी पोर्टल' : lang === 'hi' ? 'कृषि अधिकारी पोर्टल' : 'Officer Portal'}</span>
+              </div>
+            )}
           </div>
 
           {/* Farm Switcher (Active only in Farmer portal) */}
@@ -139,7 +141,7 @@ export default function Header({
           )}
         </div>
 
-        {/* Right: Weather, Audio, Share & Language Toggle */}
+        {/* Right: Audio, Share, Language, User Badge & Logout */}
         <div className="flex items-center gap-2">
           {/* Audio read-out */}
           <button
@@ -186,6 +188,29 @@ export default function Header({
             >
               हिंदी
             </button>
+          </div>
+
+          {/* Logged-in User Badge */}
+          <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>{userRole === 'officer' ? '🏛️' : userRole === 'pik_sakhi' ? '👩‍🌾' : '👨‍🌾'}</span>
+              <span className="truncate max-w-[100px] hidden lg:inline">
+                {lang === 'mr' && currentUser?.nameMr ? currentUser.nameMr : (currentUser?.name || 'User')}
+              </span>
+            </div>
+
+            {/* Sign Out Button */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition cursor-pointer"
+                title={lang === 'mr' ? 'बाहेर पडा (Sign Out)' : 'Sign Out'}
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{lang === 'mr' ? 'बाहेर पडा' : lang === 'hi' ? 'लॉगआउट' : 'Logout'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
