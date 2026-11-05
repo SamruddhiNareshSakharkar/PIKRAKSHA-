@@ -154,7 +154,7 @@ export default function MarketLinkView({ farm, lang = 'en', t }) {
           <div>
             <h3 className="text-lg font-extrabold text-slate-900">
               {lang === 'mr' 
-                ? `${farm.farmerName[lang] || farm.farmerName.en} यांच्या ${acres} एकर शेताचा उत्पादन नफा` 
+                ? `${typeof farm?.farmerName === 'object' ? (farm.farmerName[lang] || farm.farmerName.en) : (farm?.farmerName || 'Farmer')} यांच्या ${acres} एकर शेताचा उत्पादन नफा` 
                 : `Harvest Revenue Comparison for ${farm.farmerName.en} (${acres} Acres)`}
             </h3>
             <p className="text-xs text-slate-500">

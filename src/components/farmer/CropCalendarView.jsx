@@ -259,7 +259,7 @@ export default function CropCalendarView({ farm, lang = 'en', t }) {
             </h2>
             <p className="text-sm text-slate-600">
               {lang === 'mr'
-                ? `प्रत्येक वाढीच्या टप्प्यावर कीड संवेदनशीलता बदलते. ${farm.farmerName[lang] || farm.farmerName.en} यांच्या पिकाचा सध्याचा टप्पा तपासा.`
+                ? `प्रत्येक वाढीच्या टप्प्यावर कीड संवेदनशीलता बदलते. ${typeof farm?.farmerName === 'object' ? (farm.farmerName[lang] || farm.farmerName.en) : (farm?.farmerName || 'Farmer')} यांच्या पिकाचा सध्याचा टप्पा तपासा.`
                 : `Target university-certified IPM interventions to the exact BBCH growth stage of ${farm.farmerName.en}'s farm.`}
             </p>
           </div>

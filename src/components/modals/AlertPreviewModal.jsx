@@ -31,7 +31,7 @@ export default function AlertPreviewModal({ farm, lang, isOpen, onClose, onPlayA
             <div>
               <h3 className="font-extrabold text-base">Farmer Alert Broadcast Preview</h3>
               <p className="text-xs text-emerald-300">
-                {farm.farmerName[currentLang] || farm.farmerName.en} • {farm.location.village[currentLang]}, {farm.location.district[currentLang]}
+                {typeof farm?.farmerName === 'object' ? (farm.farmerName[currentLang] || farm.farmerName.en) : (farm?.farmerName || 'Farmer')} • {typeof farm?.location?.village === 'object' ? (farm.location.village[currentLang] || farm.location.village.en) : (farm?.location?.village || '')}, {typeof farm?.location?.district === 'object' ? (farm.location.district[currentLang] || farm.location.district.en) : (farm?.location?.district || '')}
               </p>
             </div>
           </div>

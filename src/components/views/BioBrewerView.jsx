@@ -45,7 +45,7 @@ export default function BioBrewerView({ farm, lang = 'en', t }) {
               <span>{lang === 'mr' ? `${cropStr} शून्य-रासायनिक जैविक औषध प्रयोगशाळा` : `${cropStr} Zero-Chemical Bio-Input Brewer`}</span>
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900">
-              {lang === 'mr' ? `${cropStr} साठी घरगुती जैविक औषध निर्मिती व ₹ बचत कॅल्क्युलेटर` : `On-Farm Bio-Input Brewer for ${farm.farmerName[lang] || farm.farmerName.en}`}
+              {lang === 'mr' ? `${cropStr} साठी घरगुती जैविक औषध निर्मिती व ₹ बचत कॅल्क्युलेटर` : `On-Farm Bio-Input Brewer for ${typeof farm?.farmerName === 'object' ? (farm.farmerName[lang] || farm.farmerName.en) : (farm?.farmerName || 'Farmer')}`}
             </h2>
             <p className="text-sm text-slate-600">
               {lang === 'mr'

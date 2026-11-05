@@ -445,10 +445,10 @@ export const useStore = () => {
 
         const createdFarm = {
           id: targetFarmId,
-          farmerName: user.name,
+          farmerName: { en: user.name, mr: user.nameMr || user.name, hi: user.name },
           location: {
-            village: user.villageName || user.village || 'Field',
-            district: user.district || 'Yavatmal',
+            village: { en: user.villageName || user.village || 'Field', mr: user.villageName || user.village || 'शेत', hi: user.villageName || user.village || 'खेत' },
+            district: { en: user.district || 'Yavatmal', mr: user.district || 'यवतमाळ', hi: user.district || 'यवतमाल' },
             state: 'Maharashtra'
           },
           crop: {
