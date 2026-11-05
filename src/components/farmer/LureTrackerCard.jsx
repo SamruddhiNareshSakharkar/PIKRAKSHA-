@@ -3,7 +3,7 @@ import { Clock, AlertCircle, CheckCircle2, RefreshCw, ShieldAlert, Sparkles } fr
 
 export default function LureTrackerCard({ farm, lang = 'en' }) {
   // Pheromone lures (Gossyplure / Helilure) degrade after 25-30 days in Vidarbha heat
-  const lureInstalledDaysAgo = 18;
+  const lureInstalledDaysAgo = farm?.trapData?.daysInField ?? 18;
   const lureMaxLifeDays = 30;
   const daysRemaining = Math.max(0, lureMaxLifeDays - lureInstalledDaysAgo);
   const percentUsed = Math.min(100, Math.round((lureInstalledDaysAgo / lureMaxLifeDays) * 100));
