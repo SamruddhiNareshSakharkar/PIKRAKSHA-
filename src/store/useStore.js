@@ -18,6 +18,17 @@ const defaultState = {
   farmerTab: 'dashboard',
   officerTab: 'overview',
   selectedFarmId: 'farm-1',
+  currentUser: {
+    id: 'farm-1',
+    name: 'Ramesh Jadhav',
+    nameMr: 'रमेश जाधव',
+    role: 'farmer',
+    crop: 'Cotton (कापूस)',
+    village: 'Ner, Yavatmal',
+    phone: '9822012345',
+    farmId: 'farm-1',
+    isLoggedIn: true
+  },
   farms: farmsData,
   trapCounts: {
     'farm-1': [4, 6, 7, 9, 10, 11, 10],
@@ -154,6 +165,7 @@ const getInitialState = () => {
             farmerTab: parsed.farmerTab || 'dashboard',
             officerTab: parsed.officerTab || 'overview',
             selectedFarmId: parsed.selectedFarmId || 'farm-1',
+            currentUser: parsed.currentUser || defaultState.currentUser,
             farms: parsed.farms,
             trapCounts: { ...defaultState.trapCounts, ...(parsed.trapCounts || {}) },
             actionTasks: mergedTasks,
@@ -412,6 +424,35 @@ export const useStore = () => {
     }));
   };
 
+  // Authentication & Role Login
+  const loginUser = (user) => {
+    setState(prev => {
+      const targetPortal = user.role === 'officer' ? 'officer' : 'farmer';
+      const targetFarmerTab = user.role === 'pik_sakhi' ? 'pik-sakhi' : 'dashboard';
+      const targetFarmId = user.farmId || prev.selectedFarmId;
+      return {
+        ...prev,
+        currentUser: {
+          ...user,
+          isLoggedIn: true
+        },
+        portal: targetPortal,
+        farmerTab: targetFarmerTab,
+        selectedFarmId: targetFarmId
+      };
+    });
+  };
+
+  const logoutUser = () => {
+    setState(prev => ({
+      ...prev,
+      currentUser: {
+        ...prev.currentUser,
+        isLoggedIn: false
+      }
+    }));
+  };
+
   // Factory reset utility
   const resetStore = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -434,6 +475,8 @@ export const useStore = () => {
     addNewFarm,
     sendBroadcastAdvisory,
     addTreatmentLog,
+    loginUser,
+    logoutUser,
     resetStore,
     addCustomActionTask,
     syncLiveWeather,

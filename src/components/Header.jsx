@@ -21,7 +21,9 @@ export default function Header({
   setLang, 
   t = {}, 
   onOpenAudio, 
-  onAddNewFarm 
+  onAddNewFarm,
+  currentUser,
+  onOpenLoginModal
 }) {
   const currentFarm = (farms && farms.find(f => f && f.id === selectedFarmId)) || (farms && farms[0]) || {};
   

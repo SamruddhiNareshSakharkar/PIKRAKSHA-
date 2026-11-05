@@ -32,6 +32,7 @@ import CropInsuranceView from './components/officer/CropInsuranceView';
 // Modals
 import AlertPreviewModal from './components/modals/AlertPreviewModal';
 import NewFarmModal from './components/modals/NewFarmModal';
+import LoginModal from './components/modals/LoginModal';
 import VoiceBulletinModal from './components/modals/VoiceBulletinModal';
 
 // Store & Speech
@@ -69,6 +70,9 @@ export default function App() {
     addCustomActionTask,
     syncLiveWeather,
     syncWithGeolocation,
+    currentUser,
+    loginUser,
+    logoutUser,
     changeFarmDistrict,
     isSyncingWeather
   } = store;
@@ -76,6 +80,7 @@ export default function App() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isNewFarmModalOpen, setIsNewFarmModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
@@ -165,6 +170,8 @@ export default function App() {
           t={t}
           onOpenAudio={() => setIsVoiceModalOpen(true)}
           onAddNewFarm={() => setIsNewFarmModalOpen(true)}
+          currentUser={currentUser}
+          onOpenLoginModal={() => setIsLoginModalOpen(true)}
         />
 
         {/* Audio Banner Pill */}
@@ -469,6 +476,14 @@ export default function App() {
         onClose={() => setIsPreviewModalOpen(false)}
         onPlayAudio={handlePlayAudio}
         isPlayingAudio={isPlayingAudio}
+      />
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        currentUser={currentUser}
+        onLogin={loginUser}
+        lang={lang}
       />
 
       <NewFarmModal
